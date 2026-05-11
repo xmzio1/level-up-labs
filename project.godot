@@ -1,0 +1,48 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[animation]
+
+compatibility/default_parent_skeleton_in_mesh_instance_3d=true
+
+[application]
+
+config/name="Roboslabs"
+config/tags=PackedStringArray("soap")
+run/main_scene="uid://cwy3l6mmvpowi"
+config/features=PackedStringArray("4.6", "Mobile")
+config/icon="res://icon.svg"
+
+[input]
+
+D={
+"deadzone": 0.2,
+"events": []
+}
+A={
+"deadzone": 0.2,
+"events": []
+}
+" "={
+"deadzone": 0.2,
+"events": []
+}
+"ui_left "={
+"deadzone": 0.2,
+"events": []
+}
+
+[physics]
+
+2d/default_gravity=951.795
+
+[rendering]
+
+renderer/rendering_method="mobile"
