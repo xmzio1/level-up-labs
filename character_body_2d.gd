@@ -1,10 +1,10 @@
 extends CharacterBody2D
 
-const SPEED = 600
+const SPEED = 250
 const JUMP_VELOCITY = -500
 const GRAVITY = 1200
 const FALL_LIMIT = 1000
-const MAX_JUMPS = 2
+const MAX_JUMPS = 1
 
 @onready var anim = $AnimatedSprite2D
 @export var respawn_position = Vector2(100, 200)
