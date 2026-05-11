@@ -243,7 +243,7 @@ scale = Vector2(2.0625, 2.0625)
 texture = ExtResource("3_nr8wp")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="player" unique_id=1498614934]
-position = Vector2(60.64032, 476.32016)
+position = Vector2(62.64032, 476.32016)
 shape = SubResource("RectangleShape2D_0h7mo")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="player" unique_id=1675117185]
