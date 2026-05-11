@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dn043ido2oo4w"
-path="res://.godot/imported/Falling animation - 4.png-4276ea3d2ed2077cb62fd049a1f5f8ce.ctex"
+uid="uid://cvvgf6xfoggow"
+path="res://.godot/imported/1.png-74b41eb86f1f58afdf7ce00fded31968.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://fall/Falling animation - 4.png"
-dest_files=["res://.godot/imported/Falling animation - 4.png-4276ea3d2ed2077cb62fd049a1f5f8ce.ctex"]
+source_file="res://fall/1.png"
+dest_files=["res://.godot/imported/1.png-74b41eb86f1f58afdf7ce00fded31968.ctex"]
 
 [params]
 

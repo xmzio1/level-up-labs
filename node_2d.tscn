@@ -5,6 +5,7 @@
 [ext_resource type="Texture2D" uid="uid://c4hgnl6ucnex6" path="res://F1.png" id="3_nr8wp"]
 [ext_resource type="Texture2D" uid="uid://c0l1im14r46qd" path="res://idle/0.png" id="14_ebxd8"]
 [ext_resource type="Texture2D" uid="uid://btiirulewka2" path="res://idle/1.png" id="15_2u7jv"]
+[ext_resource type="Texture2D" uid="uid://bq4mqenuva66f" path="res://jump/Jump.png" id="16_2u7jv"]
 [ext_resource type="Texture2D" uid="uid://iel22ryt7ls7" path="res://idle/2.png" id="16_24dk6"]
 [ext_resource type="Texture2D" uid="uid://c18c11aadu23o" path="res://idle/3.png" id="17_mryly"]
 [ext_resource type="Texture2D" uid="uid://dv7ije7dp7dyf" path="res://idle/4.png" id="18_kq1c5"]
@@ -18,17 +19,9 @@
 [ext_resource type="Texture2D" uid="uid://ddli5cfr2xg4q" path="res://Running/2.png" id="26_c4wnb"]
 [ext_resource type="Texture2D" uid="uid://becf23k3842ss" path="res://Running/3.png" id="27_7plk7"]
 [ext_resource type="Texture2D" uid="uid://cxgt8vursix8h" path="res://Running/4.png" id="28_fbwgr"]
-[ext_resource type="Texture2D" uid="uid://cqcgohgtx3n0y" path="res://Jumping animation/Jumping animation - 3.png" id="28_qilgh"]
-[ext_resource type="Texture2D" uid="uid://bucci1df6m0ad" path="res://Jumping animation/Jumping animation - 4.png" id="29_4qosj"]
 [ext_resource type="Texture2D" uid="uid://bsywrnuog1ch3" path="res://Running/5.png" id="29_7mj2a"]
-[ext_resource type="Texture2D" uid="uid://bbpe48dv2wn52" path="res://Jumping animation/Jumping animation - 5.png" id="30_cjlbh"]
 [ext_resource type="Texture2D" uid="uid://lki30xhlj7ad" path="res://Running/6.png" id="30_fshgd"]
-[ext_resource type="Texture2D" uid="uid://bbmwu5hrg16ce" path="res://Jumping animation/Jumping animation - 6.png" id="31_kfelt"]
 [ext_resource type="Texture2D" uid="uid://gb7kklaymjag" path="res://Running/7.png" id="31_lbrxf"]
-[ext_resource type="Texture2D" uid="uid://cag1xalxjfui6" path="res://Jumping animation/Jumping animation - 7.png" id="32_ytlpd"]
-[ext_resource type="Texture2D" uid="uid://cwdnj3mufc8gn" path="res://Jumping animation/Jumping animation - 8.png" id="33_2v765"]
-[ext_resource type="Texture2D" uid="uid://cfn2nf4p15h48" path="res://Jumping animation/Jumping animation - 9.png" id="34_b8fb0"]
-[ext_resource type="Texture2D" uid="uid://be7hoiuv5qcni" path="res://Jumping animation/Jumping animation - 10.png" id="35_ma08v"]
 [ext_resource type="Texture2D" uid="uid://i0enbogolsdd" path="res://IMG_9310.png" id="39_fbwgr"]
 [ext_resource type="Texture2D" uid="uid://6slfov8fkctk" path="res://IMG_9312.png" id="40_7plk7"]
 [ext_resource type="Texture2D" uid="uid://cyrs347e3qjgn" path="res://Spikes.png" id="40_fbwgr"]
@@ -87,28 +80,7 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("28_qilgh")
-}, {
-"duration": 1.0,
-"texture": ExtResource("29_4qosj")
-}, {
-"duration": 1.0,
-"texture": ExtResource("30_cjlbh")
-}, {
-"duration": 1.0,
-"texture": ExtResource("32_ytlpd")
-}, {
-"duration": 1.0,
-"texture": ExtResource("31_kfelt")
-}, {
-"duration": 1.0,
-"texture": ExtResource("33_2v765")
-}, {
-"duration": 1.0,
-"texture": ExtResource("34_b8fb0")
-}, {
-"duration": 1.0,
-"texture": ExtResource("35_ma08v")
+"texture": ExtResource("16_2u7jv")
 }],
 "loop": true,
 "name": &"jump",
@@ -250,7 +222,7 @@ shape = SubResource("RectangleShape2D_0h7mo")
 position = Vector2(61.64032, 477.64032)
 scale = Vector2(1.67626, 1.67626)
 sprite_frames = SubResource("SpriteFrames_2nhjh")
-animation = &"run"
+animation = &"fall"
 
 [node name="LEVEL !" type="TileMapLayer" parent="." unique_id=803148820]
 tile_map_data = PackedByteArray("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AAAMAAUAAAAAAAAAAAAMAAYAAAAAAAAAAAALAAYAAAAAAAAAAAAKAAYAAAAAAAAAAAALAAUAAQAAAAAAAAAKAAUAAQAAAAAAAAD+/wIAAAAAAAAAAAD//wIAAAAAAAAAAAADAAEAAAAAAAAAAAAEAAEAAAAAAAAAAAAOAAIAAAAAAAAAAAAPAAIAAAAAAAAAAAAQAAIAAAAAAAAAAAATAAEAAAAAAAAAAAAUAAEAAAAAAAAAAAAXAAEAAAAAAAAAAAAGAAMAAAAAAAAAAAAfAAUAAAAAAAAAAAAgAAUAAAAAAAAAAAA2AAIAAAAAAAAAAAA3AAEAAAAAAAAAAAA4AAAAAAAAAAAAAAA5AAAAAAAAAAAAAAA7AAAAAAAAAAAAAAA6AAAAAAAAAAAAAAA/AAAAAAAAAAAAAAA/AAEAAAAAAAAAAAA/AAIAAAAAAAAAAAA4AAEAAAAAAAAAAAA3AAIAAAAAAAAAAAA2AAMAAAAAAAAAAAA4AAIAAAAAAAAAAAA3AAMAAAAAAAAAAAA5AAEAAAAAAAAAAAA+AAEAAAAAAAAAAAA+AAIAAAAAAAAAAAA+AAMAAAAAAAAAAAA8AAMAAAAAAAAAAAA9AAIAAAAAAAAAAAA9AAMAAAAAAAAAAAA8AAIAAAAAAAAAAAA=")
