@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://cwy3l6mmvpowi"]
+[gd_scene format=3 uid="uid://cwy3l6mmvpowi"]
 
 [ext_resource type="Texture2D" uid="uid://dcmcxsml4gnuv" path="res://WhatsApp Image 2025-07-21 at 3.21.01 PM.jpeg" id="1_62e2m"]
 [ext_resource type="Script" uid="uid://dp5wsp7qsdl0k" path="res://control.gd" id="1_qtu10"]
@@ -13,7 +13,7 @@ blend_mode = 3
 
 [sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_qtu10"]
 
-[node name="Main menu" type="Control"]
+[node name="Main menu" type="Control" unique_id=808734123]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -23,28 +23,28 @@ grow_vertical = 2
 script = ExtResource("1_qtu10")
 metadata/_edit_lock_ = true
 
-[node name="Background" type="Sprite2D" parent="."]
+[node name="Background" type="Sprite2D" parent="." unique_id=133487995]
 position = Vector2(576, 320)
 scale = Vector2(0.72, 0.711)
 texture = ExtResource("1_62e2m")
 metadata/_edit_lock_ = true
 
-[node name="start" type="Button" parent="."]
+[node name="start" type="Button" parent="." unique_id=2122529180]
 show_behind_parent = true
 layout_mode = 1
 anchors_preset = 14
 anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
-offset_left = -475.0
-offset_top = -204.0
-offset_right = -1248.0
-offset_bottom = -196.0
+offset_left = 4.9999084
+offset_top = -206.0
+offset_right = -768.0001
+offset_bottom = -198.0
 grow_horizontal = 2
 grow_vertical = 2
 scale = Vector2(3.01787, 59.9065)
 
-[node name="settings" type="Button" parent="."]
+[node name="settings" type="Button" parent="." unique_id=489500421]
 show_behind_parent = true
 layout_mode = 0
 offset_left = 450.0
@@ -56,7 +56,7 @@ text = "Settings"
 icon = ExtResource("3_ee4bf")
 icon_alignment = 1
 
-[node name="press any" type="Label" parent="."]
+[node name="press any" type="Label" parent="." unique_id=630122750]
 layout_mode = 0
 offset_left = 441.0
 offset_top = 460.0
@@ -67,26 +67,26 @@ text = "press any button to start"
 horizontal_alignment = 1
 metadata/_edit_lock_ = true
 
-[node name="Sprite2D2" type="Sprite2D" parent="."]
+[node name="Sprite2D2" type="Sprite2D" parent="." unique_id=2124477393]
 position = Vector2(584, 568)
 rotation = 3.14159
 scale = Vector2(266.197, -111.866)
 texture = SubResource("CanvasTexture_ee4bf")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1647814244]
 material = SubResource("CanvasItemMaterial_ee4bf")
 position = Vector2(584, 568)
 scale = Vector2(3.95949, 3.90066)
 texture = ExtResource("3_ee4bf")
 
-[node name="logo2" type="Sprite2D" parent="."]
+[node name="logo2" type="Sprite2D" parent="." unique_id=1461103036]
 modulate = Color(0.121859, 0.371715, 0.301724, 1)
 material = SubResource("CanvasItemMaterial_qtu10")
 position = Vector2(880, 584)
 scale = Vector2(0.197009, 0.197009)
 texture = ExtResource("3_qtu10")
 
-[node name="Label" type="Label" parent="logo2"]
+[node name="Label" type="Label" parent="logo2" unique_id=661759908]
 visibility_layer = 65
 offset_left = 329.843
 offset_top = -60.1577
@@ -100,7 +100,7 @@ text = "BY ROBOslabs
 vertical_alignment = 1
 metadata/_edit_use_anchors_ = true
 
-[node name="logo" type="Sprite2D" parent="."]
+[node name="logo" type="Sprite2D" parent="." unique_id=796750205]
 modulate = Color(0.121859, 0.371715, 0.301724, 1)
 material = SubResource("CanvasItemMaterial_qtu10")
 position = Vector2(1048, 104)
@@ -108,7 +108,7 @@ scale = Vector2(0.5, 0.5)
 texture = ExtResource("3_qtu10")
 metadata/_edit_lock_ = true
 
-[node name="Button" type="Button" parent="."]
+[node name="Button" type="Button" parent="." unique_id=1007434871]
 layout_mode = 0
 offset_left = 7.99994
 offset_top = 16.0
