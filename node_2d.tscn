@@ -201,10 +201,10 @@ process_callback = 0
 script = ExtResource("46_xfyss")
 
 [node name="Button" type="Button" parent="player" unique_id=395882393]
-offset_left = 448.00006
-offset_top = 472.0
-offset_right = 648.00006
-offset_bottom = 672.0
+offset_left = -464.0
+offset_top = 104.0
+offset_right = -264.0
+offset_bottom = 304.0
 scale = Vector2(0.321595, 0.322009)
 icon = ExtResource("48_3ngjr")
 metadata/_edit_use_anchors_ = true
