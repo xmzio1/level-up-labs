@@ -15,12 +15,13 @@
 [ext_resource type="Texture2D" uid="uid://dc4rsf5aawrly" path="res://idle/8.png" id="22_6ip5v"]
 [ext_resource type="Texture2D" uid="uid://c1r8pqdjdam78" path="res://idle/9.png" id="23_q5dlx"]
 [ext_resource type="Texture2D" uid="uid://ds02ut7gwpyao" path="res://Running/0.png" id="24_6ip5v"]
-[ext_resource type="Texture2D" uid="uid://cffs5g167a6o3" path="res://Running/1.png" id="25_q5dlx"]
-[ext_resource type="Texture2D" uid="uid://ddli5cfr2xg4q" path="res://Running/2.png" id="26_c4wnb"]
+[ext_resource type="Texture2D" uid="uid://8kh7j31ybbq3" path="res://WhatsApp Image 2026-05-11 at 3.05.09 PM.jpeg" id="25_ebxd8"]
+[ext_resource type="Texture2D" uid="uid://crtyxf6vdxaeo" path="res://Running/1.png" id="25_q5dlx"]
+[ext_resource type="Texture2D" uid="uid://c8gjgvpbvy1ha" path="res://Running/2.png" id="26_c4wnb"]
 [ext_resource type="Texture2D" uid="uid://becf23k3842ss" path="res://Running/3.png" id="27_7plk7"]
-[ext_resource type="Texture2D" uid="uid://cxgt8vursix8h" path="res://Running/4.png" id="28_fbwgr"]
-[ext_resource type="Texture2D" uid="uid://bsywrnuog1ch3" path="res://Running/5.png" id="29_7mj2a"]
-[ext_resource type="Texture2D" uid="uid://lki30xhlj7ad" path="res://Running/6.png" id="30_fshgd"]
+[ext_resource type="Texture2D" uid="uid://dheibyv4nfcuf" path="res://Running/4.png" id="28_fbwgr"]
+[ext_resource type="Texture2D" uid="uid://mr7kujhog4uq" path="res://Running/5.png" id="29_7mj2a"]
+[ext_resource type="Texture2D" uid="uid://cr7x53wjn8y2t" path="res://Running/6.png" id="30_fshgd"]
 [ext_resource type="Texture2D" uid="uid://gb7kklaymjag" path="res://Running/7.png" id="31_lbrxf"]
 [ext_resource type="Texture2D" uid="uid://i0enbogolsdd" path="res://IMG_9310.png" id="39_fbwgr"]
 [ext_resource type="Texture2D" uid="uid://6slfov8fkctk" path="res://IMG_9312.png" id="40_7plk7"]
@@ -28,8 +29,6 @@
 [ext_resource type="Script" uid="uid://dfoe8prhinf5q" path="res://area_2d.gd" id="42_7mj2a"]
 [ext_resource type="Script" uid="uid://63ym3louo0e" path="res://canvas_layer.gd" id="46_xfyss"]
 [ext_resource type="Texture2D" uid="uid://clnc748dd7bw8" path="res://WhatsApp Image 2025-07-21 at 8.54.47 PM.jpeg" id="48_3ngjr"]
-[ext_resource type="Texture2D" uid="uid://cpe0frx73nyro" path="res://Wall jump cling - 1.png" id="48_4qosj"]
-[ext_resource type="Texture2D" uid="uid://dgrkqipgumd71" path="res://Wall jump cling - 2.png" id="49_cjlbh"]
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_fbwgr"]
 
@@ -117,13 +116,10 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("48_4qosj")
-}, {
-"duration": 1.0,
-"texture": ExtResource("49_cjlbh")
+"texture": ExtResource("25_ebxd8")
 }],
 "loop": true,
-"name": &"wall_jump",
+"name": &"slide",
 "speed": 5.0
 }]
 
