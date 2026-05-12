@@ -28,8 +28,6 @@
 [ext_resource type="Script" uid="uid://dfoe8prhinf5q" path="res://area_2d.gd" id="42_7mj2a"]
 [ext_resource type="Script" uid="uid://63ym3louo0e" path="res://canvas_layer.gd" id="46_xfyss"]
 [ext_resource type="Texture2D" uid="uid://clnc748dd7bw8" path="res://WhatsApp Image 2025-07-21 at 8.54.47 PM.jpeg" id="48_3ngjr"]
-[ext_resource type="Texture2D" uid="uid://cpe0frx73nyro" path="res://Wall jump cling - 1.png" id="48_4qosj"]
-[ext_resource type="Texture2D" uid="uid://dgrkqipgumd71" path="res://Wall jump cling - 2.png" id="49_cjlbh"]
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_fbwgr"]
 
@@ -117,13 +115,10 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("48_4qosj")
-}, {
-"duration": 1.0,
-"texture": ExtResource("49_cjlbh")
+"texture": ExtResource("25_ebxd8")
 }],
 "loop": true,
-"name": &"wall_jump",
+"name": &"slide",
 "speed": 5.0
 }]
 
