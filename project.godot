@@ -16,7 +16,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 config/name="Roboslabs"
 config/tags=PackedStringArray("soap")
-run/main_scene="uid://cwy3l6mmvpowi"
+run/main_scene="uid://d156rvooan6ho"
 config/features=PackedStringArray("4.6", "Mobile")
 config/icon="res://icon.svg"
 
@@ -35,6 +35,10 @@ A={
 "events": []
 }
 "ui_left "={
+"deadzone": 0.2,
+"events": []
+}
+PageDown={
 "deadzone": 0.2,
 "events": []
 }

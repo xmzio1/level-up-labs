@@ -1,14 +1,13 @@
 extends CharacterBody2D
 
-<<<<<<< HEAD
 const SPEED = 250
-=======
-const SPEED = 600
->>>>>>> parent of effaf33 (Add player slide mechanic and slide animation)
 const JUMP_VELOCITY = -500
 const GRAVITY = 1200
 const FALL_LIMIT = 1000
-const MAX_JUMPS = 1
+const MAX_JUMPS = 3
+
+const SLIDE_SPEED = 500
+const SLIDE_DURATION = 0.4
 
 @onready var anim = $AnimatedSprite2D
 @export var respawn_position = Vector2(100, 200)
@@ -18,9 +17,11 @@ var is_falling = false
 var jump_count = 0
 var run_first_time = true
 
+var is_sliding = false
+var slide_direction = 0
+
 func _ready():
 	respawn_position = global_position
-	tilemap = get_parent().get_node("! LEVEL")
 
 func _physics_process(delta):
 	if is_falling:
@@ -36,6 +37,24 @@ func _physics_process(delta):
 		anim.flip_h = true
 
 	velocity.x = direction * SPEED
+
+	# Slide
+	if Input.is_key_pressed(KEY_PAGEDOWN) and is_on_floor() and not is_sliding:
+		is_sliding = true
+
+		if anim.flip_h:
+			slide_direction = -1
+		else:
+			slide_direction = 1
+
+		anim.play("slide")
+
+		await get_tree().create_timer(SLIDE_DURATION).timeout
+
+		is_sliding = false
+
+	if is_sliding:
+		velocity.x = slide_direction * SLIDE_SPEED
 
 	if not is_on_floor():
 		velocity.y += GRAVITY * delta
@@ -55,7 +74,7 @@ func _physics_process(delta):
 
 	move_and_slide()
 
-	if is_on_floor():
+	if is_on_floor() and not is_sliding:
 		if direction != 0:
 			if anim.animation != "run":
 				run_first_time = true
@@ -74,10 +93,12 @@ func _physics_process(delta):
 			run_first_time = true
 	else:
 		run_first_time = true
-		if velocity.y < 0:
-			anim.play("jump")
-		else:
-			anim.play("fall")
+
+		if not is_sliding:
+			if velocity.y < 0:
+				anim.play("jump")
+			else:
+				anim.play("fall")
 
 	if global_position.y > FALL_LIMIT:
 		start_fall_sequence()
@@ -86,7 +107,9 @@ func start_fall_sequence():
 	is_falling = true
 	anim.play("fall")
 	velocity = Vector2.ZERO
+
 	await get_tree().create_timer(0.7).timeout
+
 	global_position = respawn_position
 	is_falling = false
 
