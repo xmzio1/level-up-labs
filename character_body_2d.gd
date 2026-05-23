@@ -8,6 +8,7 @@ const MAX_JUMPS = 3
 
 const SLIDE_SPEED = 700
 const SLIDE_DURATION = 0.4
+const SLIDE_COOLDOWN = 2
 
 @onready var anim = $AnimatedSprite2D
 @export var respawn_position = Vector2(100, 200)
@@ -22,6 +23,7 @@ var run_first_time = true
 var is_sliding = false
 var slide_timer = 0.0
 var slide_direction = 1
+var slide_cooldown_timer = 0.0
 
 func _ready():
 	respawn_position = global_position
@@ -30,6 +32,12 @@ func _physics_process(delta):
 
 	if is_falling:
 		return
+
+	# =========================
+	# تقليل وقت الكولداون
+	# =========================
+	if slide_cooldown_timer > 0:
+		slide_cooldown_timer -= delta
 
 	# =========================
 	# الاتجاه
@@ -45,12 +53,18 @@ func _physics_process(delta):
 	# =========================
 	# بدء السلايد
 	# =========================
-	if Input.is_action_just_pressed("slide") and is_on_floor() and not is_sliding:
+	if Input.is_action_just_pressed("ui_page_down") \
+	and is_on_floor() \
+	and slide_cooldown_timer <= 0 \
+	and not is_sliding:
 
 		print("SLIDE START")
 
 		is_sliding = true
 		slide_timer = SLIDE_DURATION
+
+		# تشغيل الكولداون
+		slide_cooldown_timer = SLIDE_COOLDOWN
 
 		if anim.flip_h:
 			slide_direction = -1
@@ -172,6 +186,7 @@ func start_fall_sequence():
 
 	is_falling = false
 
+
 func die():
 
 	if is_falling:
@@ -188,6 +203,7 @@ func die():
 	global_position = respawn_position
 
 	is_falling = false
+
 
 func is_on_danger_tile() -> bool:
 
