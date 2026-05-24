@@ -2,9 +2,21 @@ extends CharacterBody2D
 
 const SPEED = 250
 const JUMP_VELOCITY = -500
-const GRAVITY = 1200
+
+# جاذبية أكثر سلاسة
+const GRAVITY = 1000
+const FALL_GRAVITY = 1800
+
 const FALL_LIMIT = 1000
 const MAX_JUMPS = 3
+
+# القفزة القصيرة
+const JUMP_CUT = 0.5
+const SHORT_PRESS_TIME = 0.15
+
+# تحسين الإحساس
+const COYOTE_TIME = 0.12
+const JUMP_BUFFER = 0.12
 
 const SLIDE_SPEED = 700
 const SLIDE_DURATION = 0.4
@@ -13,7 +25,7 @@ const SLIDE_COOLDOWN = 2
 @onready var anim = $AnimatedSprite2D
 @onready var collision = $CollisionShape2D
 
-@export var respawn_position = Vector2(100, 200)
+@export var respawn_position = Vector2(100,200)
 
 var tilemap : TileMap
 
@@ -27,8 +39,15 @@ var slide_timer = 0.0
 var slide_direction = 1
 var slide_cooldown_timer = 0.0
 
-# حفظ مكان الكولجن الأصلي
+# jump
+var jump_hold_time = 0.0
+var jumping = false
+var coyote_timer = 0.0
+var jump_buffer_timer = 0.0
+
+# حفظ مكان الكولجن
 var original_position
+
 
 func _ready():
 	respawn_position = global_position
@@ -49,7 +68,13 @@ func _physics_process(delta):
 		collision.position = original_position
 
 	# =========================
-	# تقليل وقت الكولداون
+	# عداد ضغط القفز
+	# =========================
+	if jumping:
+		jump_hold_time += delta
+
+	# =========================
+	# تقليل كولداون السلايد
 	# =========================
 	if slide_cooldown_timer > 0:
 		slide_cooldown_timer -= delta
@@ -57,7 +82,7 @@ func _physics_process(delta):
 	# =========================
 	# الاتجاه
 	# =========================
-	var direction = Input.get_axis("ui_left", "ui_right")
+	var direction = Input.get_axis("ui_left","ui_right")
 
 	if direction > 0:
 		anim.flip_h = false
@@ -101,25 +126,54 @@ func _physics_process(delta):
 	# =========================
 	# الجاذبية
 	# =========================
-	if not is_on_floor():
-		velocity.y += GRAVITY * delta
-	else:
+	if is_on_floor():
+
+		coyote_timer = COYOTE_TIME
 		jump_count = 0
 
+	else:
+
+		coyote_timer -= delta
+
+		if velocity.y < 0:
+			velocity.y += GRAVITY * delta
+		else:
+			velocity.y += FALL_GRAVITY * delta
+
 	# =========================
-	# القفز
+	# تخزين ضغط القفز
 	# =========================
 	if Input.is_action_just_pressed("ui_accept"):
 
-		if is_on_floor():
+		jump_buffer_timer = JUMP_BUFFER
+		jumping = true
+		jump_hold_time = 0
+
+	if jump_buffer_timer > 0:
+		jump_buffer_timer -= delta
+
+	# =========================
+	# تنفيذ القفز
+	# =========================
+	if jump_buffer_timer > 0:
+
+		if coyote_timer > 0 or jump_count < MAX_JUMPS:
 
 			velocity.y = JUMP_VELOCITY
 			jump_count += 1
 
-		elif jump_count < MAX_JUMPS:
+			jump_buffer_timer = 0
+			coyote_timer = 0
 
-			velocity.y = JUMP_VELOCITY
-			jump_count += 1
+	# =========================
+	# قفزة قصيرة فقط إذا كانت ضغطة قصيرة
+	# =========================
+	if Input.is_action_just_released("ui_accept"):
+
+		jumping = false
+
+		if jump_hold_time < SHORT_PRESS_TIME and velocity.y < 0:
+			velocity.y *= JUMP_CUT
 
 	# =========================
 	# الحركة
