@@ -177,7 +177,8 @@ position = Vector2(-251, -30)
 script = ExtResource("1_o2axr")
 
 [node name="Camera2D" type="Camera2D" parent="player 2D/CharacterBody2D" unique_id=885417300]
-position = Vector2(576, 320)
+position = Vector2(535, 163)
+ignore_rotation = false
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="player 2D/CharacterBody2D" unique_id=1870406189]
 position = Vector2(539, 157)
@@ -195,6 +196,6 @@ tile_set = SubResource("TileSet_defu5")
 
 [node name="Sprite2D" type="Sprite2D" parent="TutorialO" unique_id=1659041534]
 z_index = -1
-position = Vector2(1051.75, 315.99994)
+position = Vector2(1046, 317)
 scale = Vector2(7.020312, 3.922222)
 texture = ExtResource("30_rvwrk")
