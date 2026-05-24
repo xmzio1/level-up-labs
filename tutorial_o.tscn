@@ -178,7 +178,6 @@ script = ExtResource("1_o2axr")
 
 [node name="Camera2D" type="Camera2D" parent="player 2D/CharacterBody2D" unique_id=885417300]
 position = Vector2(576, 320)
-zoom = Vector2(0.5, 0.5)
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="player 2D/CharacterBody2D" unique_id=1870406189]
 position = Vector2(539, 157)
