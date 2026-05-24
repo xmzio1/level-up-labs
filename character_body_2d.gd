@@ -4,11 +4,11 @@ const SPEED = 250
 const JUMP_VELOCITY = -500
 
 # جاذبية أكثر سلاسة
-const GRAVITY = 1000
+const GRAVITY = 900
 const FALL_GRAVITY = 1800
 
 const FALL_LIMIT = 1000
-const MAX_JUMPS = 3
+const MAX_JUMPS = 1
 
 # القفزة القصيرة
 const JUMP_CUT = 0.5
@@ -20,7 +20,7 @@ const JUMP_BUFFER = 0.12
 
 const SLIDE_SPEED = 700
 const SLIDE_DURATION = 0.4
-const SLIDE_COOLDOWN = 2
+const SLIDE_COOLDOWN = 0.25
 
 @onready var anim = $AnimatedSprite2D
 @onready var collision = $CollisionShape2D
