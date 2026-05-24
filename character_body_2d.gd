@@ -11,6 +11,8 @@ const SLIDE_DURATION = 0.4
 const SLIDE_COOLDOWN = 2
 
 @onready var anim = $AnimatedSprite2D
+@onready var collision = $CollisionShape2D
+
 @export var respawn_position = Vector2(100, 200)
 
 var tilemap : TileMap
@@ -25,13 +27,26 @@ var slide_timer = 0.0
 var slide_direction = 1
 var slide_cooldown_timer = 0.0
 
+# حفظ مكان الكولجن الأصلي
+var original_position
+
 func _ready():
 	respawn_position = global_position
+	original_position = collision.position
+
 
 func _physics_process(delta):
 
 	if is_falling:
 		return
+
+	# =========================
+	# تحريك الكولجن أثناء السلايد
+	# =========================
+	if is_sliding:
+		collision.position.y = original_position.y - 8
+	else:
+		collision.position = original_position
 
 	# =========================
 	# تقليل وقت الكولداون
@@ -46,7 +61,6 @@ func _physics_process(delta):
 
 	if direction > 0:
 		anim.flip_h = false
-
 	elif direction < 0:
 		anim.flip_h = true
 
@@ -58,12 +72,8 @@ func _physics_process(delta):
 	and slide_cooldown_timer <= 0 \
 	and not is_sliding:
 
-		print("SLIDE START")
-
 		is_sliding = true
 		slide_timer = SLIDE_DURATION
-
-		# تشغيل الكولداون
 		slide_cooldown_timer = SLIDE_COOLDOWN
 
 		if anim.flip_h:
@@ -86,7 +96,6 @@ func _physics_process(delta):
 			is_sliding = false
 
 	else:
-
 		velocity.x = direction * SPEED
 
 	# =========================
@@ -133,19 +142,6 @@ func _physics_process(delta):
 				anim.play("run")
 				anim.frame = 0
 
-			elif run_first_time:
-
-				if anim.frame > 3:
-					anim.frame = 0
-
-				if anim.frame == 3:
-					run_first_time = false
-
-			else:
-
-				if anim.frame <= 1:
-					anim.frame = 5
-
 		else:
 
 			anim.play("idle")
@@ -172,18 +168,16 @@ func _physics_process(delta):
 	if is_on_danger_tile():
 		die()
 
+
 func start_fall_sequence():
 
 	is_falling = true
-
 	anim.play("fall")
-
 	velocity = Vector2.ZERO
 
 	await get_tree().create_timer(0.7).timeout
 
 	global_position = respawn_position
-
 	is_falling = false
 
 
@@ -193,15 +187,12 @@ func die():
 		return
 
 	is_falling = true
-
 	anim.play("fall")
-
 	velocity = Vector2.ZERO
 
 	await get_tree().create_timer(0.7).timeout
 
 	global_position = respawn_position
-
 	is_falling = false
 
 
@@ -211,7 +202,6 @@ func is_on_danger_tile() -> bool:
 		return false
 
 	var local_position = tilemap.to_local(global_position)
-
 	var map_coords = tilemap.local_to_map(local_position)
 
 	var tile_data = tilemap.get_cell_tile_data(1, map_coords)
