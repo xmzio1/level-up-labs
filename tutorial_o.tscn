@@ -16,15 +16,15 @@
 [ext_resource type="Texture2D" uid="uid://bkjbaf3f53ktl" path="res://idle/8.png" id="9_fdqce"]
 [ext_resource type="Texture2D" uid="uid://cqu7slao7k4kc" path="res://idle/9.png" id="10_ygq2l"]
 [ext_resource type="Texture2D" uid="uid://bbft23u30o6m6" path="res://jump/Jump.png" id="20_3sw3s"]
-[ext_resource type="Texture2D" uid="uid://dy2tfnhd5oxpc" path="res://Running/0.png" id="21_rvwrk"]
-[ext_resource type="Texture2D" uid="uid://d3bwnqyqu4wxe" path="res://Running/1.png" id="22_a0h7m"]
+[ext_resource type="Texture2D" uid="uid://bnxkrf8a5623y" path="res://Running/0.png" id="21_rvwrk"]
+[ext_resource type="Texture2D" uid="uid://c26dappkxeny0" path="res://Running/1.png" id="22_a0h7m"]
 [ext_resource type="Texture2D" uid="uid://bes0b4b6jkhhr" path="res://Running/2.png" id="23_sb8ek"]
 [ext_resource type="Texture2D" uid="uid://baa4gat7g670k" path="res://Running/3.png" id="24_7x0g7"]
 [ext_resource type="Texture2D" uid="uid://d15eb2nv4w4f4" path="res://Slide.png" id="25_0mcg7"]
-[ext_resource type="Texture2D" uid="uid://nvvqpge4e6f3" path="res://Running/4.png" id="25_defu5"]
-[ext_resource type="Texture2D" uid="uid://80n8kwbeh5ik" path="res://Running/5.png" id="26_856co"]
+[ext_resource type="Texture2D" uid="uid://bxouk32m5js1c" path="res://Running/4.png" id="25_defu5"]
+[ext_resource type="Texture2D" uid="uid://5nbt2potm7mu" path="res://Running/5.png" id="26_856co"]
 [ext_resource type="Texture2D" uid="uid://bqsjlee1ero66" path="res://Lvl1 assests/Icey floor.png" id="27_a0h7m"]
-[ext_resource type="Texture2D" uid="uid://dv3ix3qilu2bm" path="res://Running/6.png" id="27_gyfm6"]
+[ext_resource type="Texture2D" uid="uid://6r6c2fhl7stm" path="res://Running/6.png" id="27_gyfm6"]
 [ext_resource type="Texture2D" uid="uid://cnc86d2qq2hdh" path="res://Tutorial Assets/Bridge.png" id="28_3sw3s"]
 [ext_resource type="Texture2D" uid="uid://ri7wdnhhnpyc" path="res://Running/7.png" id="28_w0ak5"]
 [ext_resource type="Texture2D" uid="uid://bebcdwr2gj3gc" path="res://Tutorial Assets/Bridge Stilts2.png" id="29_rvwrk"]
@@ -194,7 +194,7 @@ ignore_rotation = false
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="player 2D/CharacterBody2D" unique_id=1870406189]
 position = Vector2(539, 157)
 sprite_frames = SubResource("SpriteFrames_o2axr")
-animation = &"slide"
+animation = &"run"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="player 2D/CharacterBody2D" unique_id=353076147]
 position = Vector2(536, 161.625)
