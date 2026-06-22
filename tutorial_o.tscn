@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://v4afnnrnfcla" path="res://character_body_2d.gd" id="1_o2axr"]
 [ext_resource type="Texture2D" uid="uid://ctbp60k6qdwtg" path="res://fall/0.png" id="1_olo4e"]
 [ext_resource type="Texture2D" uid="uid://c7la0qv5y83lv" path="res://fall/1.png" id="2_1iq57"]
+[ext_resource type="Texture2D" uid="uid://bjd6bip067wne" path="res://Running/Magnet hand.png" id="2_defu5"]
 [ext_resource type="Texture2D" uid="uid://dxfj2og4e3sx6" path="res://idle/1.png" id="2_wohsf"]
 [ext_resource type="Texture2D" uid="uid://dtsld38vi6sde" path="res://fall/2.png" id="3_54bqg"]
 [ext_resource type="Texture2D" uid="uid://lk0ustlk442m" path="res://idle/2.png" id="3_q837f"]
@@ -23,6 +24,7 @@
 [ext_resource type="Texture2D" uid="uid://d15eb2nv4w4f4" path="res://Slide.png" id="25_0mcg7"]
 [ext_resource type="Texture2D" uid="uid://bxouk32m5js1c" path="res://Running/4.png" id="25_defu5"]
 [ext_resource type="Texture2D" uid="uid://5nbt2potm7mu" path="res://Running/5.png" id="26_856co"]
+[ext_resource type="Texture2D" uid="uid://cupqhs8c0wlg" path="res://Lvl1 assests/Snow particle.png" id="27_856co"]
 [ext_resource type="Texture2D" uid="uid://bqsjlee1ero66" path="res://Lvl1 assests/Icey floor.png" id="27_a0h7m"]
 [ext_resource type="Texture2D" uid="uid://6r6c2fhl7stm" path="res://Running/6.png" id="27_gyfm6"]
 [ext_resource type="Texture2D" uid="uid://cnc86d2qq2hdh" path="res://Tutorial Assets/Bridge.png" id="28_3sw3s"]
@@ -33,8 +35,8 @@
 [ext_resource type="Texture2D" uid="uid://6slfov8fkctk" path="res://IMG_9312.png" id="32_7x0g7"]
 [ext_resource type="Texture2D" uid="uid://cexr0jgs3i568" path="res://ف.png" id="32_sb8ek"]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_sb8ek"]
-radius = 236.45
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_f450d"]
+size = Vector2(247, 187)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_o2axr"]
 animations = [{
@@ -139,10 +141,6 @@ animations = [{
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_aimf2"]
 size = Vector2(42.25, 54.75)
 
-[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_a0h7m"]
-width = 16
-height = 16
-
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_sb8ek"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_sb8ek"]
@@ -197,12 +195,17 @@ script = ExtResource("1_o2axr")
 
 [node name="MagnetPivot" type="Node2D" parent="player 2D/CharacterBody2D" unique_id=112498885]
 
+[node name="MagnetSprite" type="Sprite2D" parent="player 2D/CharacterBody2D/MagnetPivot" unique_id=272763696]
+position = Vector2(15, 1)
+texture = ExtResource("2_defu5")
+
 [node name="MagnetArea" type="Area2D" parent="player 2D/CharacterBody2D/MagnetPivot" unique_id=694219337]
 collision_layer = 2
 collision_mask = 3
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="player 2D/CharacterBody2D/MagnetPivot/MagnetArea" unique_id=1358001297]
-shape = SubResource("CircleShape2D_sb8ek")
+position = Vector2(113.5, -70.5)
+shape = SubResource("RectangleShape2D_f450d")
 
 [node name="Camera2D" type="Camera2D" parent="player 2D/CharacterBody2D" unique_id=885417300]
 ignore_rotation = false
@@ -210,13 +213,15 @@ ignore_rotation = false
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="player 2D/CharacterBody2D" unique_id=1870406189]
 sprite_frames = SubResource("SpriteFrames_o2axr")
 animation = &"run"
+metadata/_edit_lock_ = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="player 2D/CharacterBody2D" unique_id=353076147]
 shape = SubResource("RectangleShape2D_aimf2")
 
 [node name="CPUParticles2D" type="CPUParticles2D" parent="player 2D/CharacterBody2D" unique_id=1695027517]
+emitting = false
 amount = 1
-texture = SubResource("NoiseTexture2D_a0h7m")
+texture = ExtResource("27_856co")
 lifetime = 0.5
 gravity = Vector2(-500, -998)
 
