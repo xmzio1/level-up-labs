@@ -22,6 +22,15 @@ const SLIDE_SPEED = 700
 const SLIDE_DURATION = 0.4
 const SLIDE_COOLDOWN = 0.25
 
+# ==========================================
+# متغيرات المغناطيس المطور (التوجيه بالماوس)
+# ==========================================
+@export var magnet_speed: float = 350.0  # سرعة السحب الثابتة نحو اللاعب
+@onready var magnet_pivot: Node2D = get_node_or_null("MagnetPivot")
+@onready var magnet_area: Area2D = get_node_or_null("MagnetPivot/MagnetArea")
+var is_magnet_on: bool = false
+# ==========================================
+
 @onready var anim = $AnimatedSprite2D
 @onready var collision = $CollisionShape2D
 
@@ -52,12 +61,35 @@ var original_position
 func _ready():
 	respawn_position = global_position
 	original_position = collision.position
+	is_magnet_on = false
 
 
 func _physics_process(delta):
 
 	if is_falling:
 		return
+
+	# ==========================================
+	# تدوير المغناطيس باتجاه الماوس والتحقق من زر E
+	# ==========================================
+	if magnet_pivot != null:
+		magnet_pivot.look_at(get_global_mouse_position())
+	
+	if Input.is_key_pressed(KEY_E) or Input.is_physical_key_pressed(KEY_E):
+		is_magnet_on = true
+		var bodies_count = magnet_area.get_overlapping_bodies().size() if magnet_area else 0
+		print("زر E يعمل بنجاح! المغناطيس مشتعل الآن. عدد الأجسام في النطاق: ", bodies_count)
+	else:
+		# عند ترك الزر، نعيد الجاذبية فوراً لأي صندوق كان يسحب
+		if is_magnet_on == true and magnet_area != null:
+			for body in magnet_area.get_overlapping_bodies():
+				if body is RigidBody2D and body.is_in_group("pullable"):
+					body.gravity_scale = 1.0
+		is_magnet_on = false
+
+	if is_magnet_on:
+		pull_objects(delta)
+	# ==========================================
 
 	# =========================
 	# تحريك الكولجن أثناء السلايد
@@ -221,6 +253,51 @@ func _physics_process(delta):
 	# =========================
 	if is_on_danger_tile():
 		die()
+
+
+# ==========================================
+# دالة السحب الصارم نحو مركز دائرة اللاعب (الـ Pivot) مباشرة
+# ==========================================
+func pull_objects(_delta: float) -> void:
+	if magnet_area == null:
+		return
+		
+	var overlapping_bodies = magnet_area.get_overlapping_bodies()
+	
+	# تحديد نقطة الهدف المركزية (موقع اللاعب العالمي الثابت)
+	var target_center = global_position
+	if magnet_pivot != null:
+		target_center = magnet_pivot.global_position # مركز الدوران للاعب بالظبط
+	
+	for body in overlapping_bodies:
+		# حماية الكود من بلاطات الأرضية واللاعب نفسه
+		if body == self or body is TileMap or (Engine.get_version_info().major >= 4 and body.is_class("TileMapLayer")) or body.has_method("get_tileset"):
+			continue
+			
+		if body.is_in_group("pullable"):
+			# حساب المسافة الصافية من الجسم إلى مركز اللاعب
+			var distance = target_center.distance_to(body.global_position)
+			
+			# التوقف الصارم والكامل عند الوصول لمركز دائرة اللاعب (45 بكسل كمحيط آمن)
+			if distance < 45.0:
+				if body is RigidBody2D:
+					body.linear_velocity = Vector2.ZERO
+					body.angular_velocity = 0.0
+					body.gravity_scale = 1.0 
+				continue
+				
+			# حساب الاتجاه الصافي مباشرة من الجسم إلى مركز هدف اللاعب 
+			var direction = body.global_position.direction_to(target_center)
+			
+			if body is RigidBody2D:
+				body.gravity_scale = 0.0      # إلغاء الجاذبية تماماً أثناء التمغنط لمنع أي هبوط أو ارتطام عكسي
+				body.angular_velocity = 0.0    # إلغاء عزم الدوران لضمان سحب مستقيم
+				body.linear_velocity = direction * magnet_speed  # تطبيق السرعة الصارمة نحو مركز اللاعب مباشرة
+				
+			elif body is CharacterBody2D:
+				body.velocity = direction * magnet_speed
+				body.move_and_slide()
+# ==========================================
 
 
 func start_fall_sequence():

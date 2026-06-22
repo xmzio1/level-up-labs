@@ -31,6 +31,10 @@
 [ext_resource type="Texture2D" uid="uid://oari7fpk7pxo" path="res://Lvl1 assests/Icy ground.png" id="30_a0h7m"]
 [ext_resource type="Texture2D" uid="uid://bknykaveif5fi" path="res://Lvl1 assests/Lvl 1 bg.png" id="30_rvwrk"]
 [ext_resource type="Texture2D" uid="uid://6slfov8fkctk" path="res://IMG_9312.png" id="32_7x0g7"]
+[ext_resource type="Texture2D" uid="uid://cexr0jgs3i568" path="res://ف.png" id="32_sb8ek"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_sb8ek"]
+radius = 236.45
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_o2axr"]
 animations = [{
@@ -47,7 +51,7 @@ animations = [{
 "duration": 100.0,
 "texture": ExtResource("4_o4oii")
 }],
-"loop": false,
+"loop": 0,
 "name": &"fall",
 "speed": 12.0
 }, {
@@ -82,7 +86,7 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("10_ygq2l")
 }],
-"loop": true,
+"loop": 1,
 "name": &"idle",
 "speed": 12.0
 }, {
@@ -90,7 +94,7 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("20_3sw3s")
 }],
-"loop": true,
+"loop": 1,
 "name": &"jump",
 "speed": 12.0
 }, {
@@ -119,7 +123,7 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("28_w0ak5")
 }],
-"loop": true,
+"loop": 1,
 "name": &"run",
 "speed": 12.0
 }, {
@@ -127,7 +131,7 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("25_0mcg7")
 }],
-"loop": true,
+"loop": 1,
 "name": &"slide",
 "speed": 12.0
 }]
@@ -179,29 +183,38 @@ sources/2 = SubResource("TileSetAtlasSource_a0h7m")
 sources/3 = SubResource("TileSetAtlasSource_defu5")
 sources/4 = SubResource("TileSetAtlasSource_856co")
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_aglp4"]
+size = Vector2(65, 59)
+
 [node name="TutorialO" type="Node2D" unique_id=1648226942]
 
 [node name="player 2D" type="Sprite2D" parent="." unique_id=1872843154]
-position = Vector2(-251, -30)
+position = Vector2(15, 211)
 
 [node name="CharacterBody2D" type="CharacterBody2D" parent="player 2D" unique_id=1070440165]
+collision_mask = 3
 script = ExtResource("1_o2axr")
 
+[node name="MagnetPivot" type="Node2D" parent="player 2D/CharacterBody2D" unique_id=112498885]
+
+[node name="MagnetArea" type="Area2D" parent="player 2D/CharacterBody2D/MagnetPivot" unique_id=694219337]
+collision_layer = 2
+collision_mask = 3
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="player 2D/CharacterBody2D/MagnetPivot/MagnetArea" unique_id=1358001297]
+shape = SubResource("CircleShape2D_sb8ek")
+
 [node name="Camera2D" type="Camera2D" parent="player 2D/CharacterBody2D" unique_id=885417300]
-position = Vector2(535, 163)
 ignore_rotation = false
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="player 2D/CharacterBody2D" unique_id=1870406189]
-position = Vector2(539, 157)
 sprite_frames = SubResource("SpriteFrames_o2axr")
 animation = &"run"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="player 2D/CharacterBody2D" unique_id=353076147]
-position = Vector2(536, 161.625)
 shape = SubResource("RectangleShape2D_aimf2")
 
 [node name="CPUParticles2D" type="CPUParticles2D" parent="player 2D/CharacterBody2D" unique_id=1695027517]
-position = Vector2(536, 180)
 amount = 1
 texture = SubResource("NoiseTexture2D_a0h7m")
 lifetime = 0.5
@@ -222,3 +235,22 @@ metadata/_edit_lock_ = true
 z_index = -2
 position = Vector2(634, 0.5)
 texture = ExtResource("30_rvwrk")
+
+[node name="RigidBody2D" type="RigidBody2D" parent="." unique_id=130530824 groups=["pullable"]]
+position = Vector2(372, 239)
+disable_mode = 2
+collision_layer = 2
+collision_mask = 3
+can_sleep = false
+lock_rotation = true
+freeze_mode = 1
+linear_damp = -1.0
+
+[node name="Sprite2D" type="Sprite2D" parent="RigidBody2D" unique_id=1840460215]
+position = Vector2(-1, -0.5)
+scale = Vector2(1, 0.890625)
+texture = ExtResource("32_sb8ek")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RigidBody2D" unique_id=1519455698]
+position = Vector2(-0.5, -1.5)
+shape = SubResource("RectangleShape2D_aglp4")
