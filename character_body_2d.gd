@@ -4,8 +4,8 @@ const SPEED = 250
 const JUMP_VELOCITY = -500
 
 # جاذبية أكثر سلاسة
-const GRAVITY = 900
-const FALL_GRAVITY = 1800
+const GRAVITY = 950
+const FALL_GRAVITY = 1900
 
 const FALL_LIMIT = 1000
 const MAX_JUMPS = 1
