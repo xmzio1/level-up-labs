@@ -182,6 +182,8 @@ sources/2 = SubResource("TileSetAtlasSource_a0h7m")
 sources/3 = SubResource("TileSetAtlasSource_defu5")
 sources/4 = SubResource("TileSetAtlasSource_856co")
 
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_bqros"]
+
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_aglp4"]
 size = Vector2(65, 59)
 
@@ -236,8 +238,7 @@ position = Vector2(372, 239)
 disable_mode = 2
 collision_layer = 2
 collision_mask = 3
-can_sleep = false
-lock_rotation = true
+physics_material_override = SubResource("PhysicsMaterial_bqros")
 freeze_mode = 1
 linear_damp = -1.0
 

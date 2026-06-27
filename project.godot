@@ -115,6 +115,7 @@ sensors/enable_gravity=true
 
 [physics]
 
+2d/physics_engine="GodotPhysics2D"
 2d/default_gravity=951.795
 
 [rendering]
