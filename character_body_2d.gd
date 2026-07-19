@@ -81,7 +81,7 @@ func _physics_process(delta):
 	if magnet_pivot != null:
 		magnet_pivot.look_at(get_global_mouse_position())
 	
-	if Input.is_key_pressed(KEY_E) or Input.is_physical_key_pressed(KEY_E):
+	if Input.is_action_pressed("toggle_magnet"):
 		is_magnet_on = true
 		
 		# تفعيل ظهور الـ Sprite عند الضغط
