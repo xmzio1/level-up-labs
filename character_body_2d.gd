@@ -23,7 +23,7 @@ const SLIDE_DURATION = 0.4
 const SLIDE_COOLDOWN = 0.25
 
 # ==========================================
-# متغيرات المغناطيس المطور (التوجيه بالماوس)
+# متغيرات المغناطيس المطور (التوجيه بالـ Input Map)
 # ==========================================
 @export var magnet_speed: float = 350.0  # سرعة السحب الثابتة نحو اللاعب
 @onready var magnet_pivot: Node2D = get_node_or_null("MagnetPivot")
@@ -76,10 +76,15 @@ func _physics_process(delta):
 		return
 
 	# ==========================================
-	# تدوير المغناطيس باتجاه الماوس والتحقق من زر E
+	# تدوير المغناطيس باستخدام الـ Input Map والتحقق من زر E
 	# ==========================================
 	if magnet_pivot != null:
-		magnet_pivot.look_at(get_global_mouse_position())
+		# جلب متجه الاتجاه بناءً على أزرار التحكم المحددة
+		var aim_dir = Input.get_vector("aim_left", "aim_right", "aim_up", "aim_down")
+		
+		# إذا كان هناك إدخال فعلي، قم بالتدوير لتجنب الرجوع التلقائي للصفر
+		if aim_dir.length() > 0.0:
+			magnet_pivot.global_rotation = aim_dir.angle()
 	
 	if Input.is_action_pressed("toggle_magnet"):
 		is_magnet_on = true
