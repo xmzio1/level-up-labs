@@ -23,21 +23,33 @@ const SLIDE_DURATION = 0.4
 const SLIDE_COOLDOWN = 0.25
 
 # ==========================================
-# متغيرات المغناطيس المطور (التوجيه بالـ Input Map)
+# متغيرات المغناطيس المطور والرمي
 # ==========================================
-@export var magnet_speed: float = 350.0  # سرعة السحب الثابتة نحو اللاعب
+@export var magnet_speed: float = 600.0        # سرعة سحب الجسم نحو الرأس
+@export var throw_force_x: float = 700.0       # قوة الرمي الأفقي
+@export var throw_force_y: float = -200.0      # قوة الرمي للأعلى قليلاً
+@export var hold_throw_time: float = 0.25      # الوقت المطلوب بالثواني للضغط المطول للرمي
+
 @onready var magnet_pivot: Node2D = get_node_or_null("MagnetPivot")
 @onready var magnet_area: Area2D = get_node_or_null("MagnetPivot/MagnetArea")
-# ربط عقدة السبرايت الجديدة برمجياً (تأكد من مطابقة الاسم بداخل مشهدك)
 @onready var magnet_sprite: Sprite2D = get_node_or_null("MagnetPivot/MagnetSprite")
 
+# عقدة موضع التثبيت فوق الرأس
+@onready var hold_position: Node2D = get_node_or_null("HoldPosition")
+
 var is_magnet_on: bool = false
+var held_object: Node2D = null         # الجسم الممسوك حالياً
+var is_object_attached: bool = false    # هل وصل الجسم للرأس وتم تثبيته؟
+
+# عداد وقت الضغط المطول للرمي
+var e_press_timer: float = 0.0
+var is_e_held: bool = false
 # ==========================================
 
 @onready var anim = $AnimatedSprite2D
 @onready var collision = $CollisionShape2D
 
-@export var respawn_position = Vector2(100,200)
+@export var respawn_position = Vector2(100, 200)
 
 var tilemap : TileMap
 
@@ -65,7 +77,6 @@ func _ready():
 	respawn_position = global_position
 	original_position = collision.position
 	is_magnet_on = false
-	# التأكد من إخفاء السبرايت عند تشغيل اللعبة
 	if magnet_sprite != null:
 		magnet_sprite.visible = false
 
@@ -76,39 +87,19 @@ func _physics_process(delta):
 		return
 
 	# ==========================================
-	# تدوير المغناطيس باستخدام الـ Input Map والتحقق من زر E
+	# تدوير المغناطيس نحو الماوس
 	# ==========================================
 	if magnet_pivot != null:
-		# جلب متجه الاتجاه بناءً على أزرار التحكم المحددة
-		var aim_dir = Input.get_vector("aim_left", "aim_right", "aim_up", "aim_down")
-		
-		# إذا كان هناك إدخال فعلي، قم بالتدوير لتجنب الرجوع التلقائي للصفر
-		if aim_dir.length() > 0.0:
-			magnet_pivot.global_rotation = aim_dir.angle()
-	
-	if Input.is_action_pressed("toggle_magnet"):
-		is_magnet_on = true
-		
-		# تفعيل ظهور الـ Sprite عند الضغط
-		if magnet_sprite != null:
-			magnet_sprite.visible = true
-			
-		var bodies_count = magnet_area.get_overlapping_bodies().size() if magnet_area else 0
-		print("زر E يعمل بنجاح! المغناطيس مشتعل الآن. عدد الأجسام في النطاق: ", bodies_count)
-	else:
-		# إخفاء الـ Sprite فور ترك الزر
-		if magnet_sprite != null:
-			magnet_sprite.visible = false
-			
-		# أمان فيزيائي: إعادة الجاذبية فوراً للأجسام عند إطفاء المغناطيس
-		if is_magnet_on == true and magnet_area != null:
-			for body in magnet_area.get_overlapping_bodies():
-				if body is RigidBody2D and body.is_in_group("pullable"):
-					body.gravity_scale = 1.0
-		is_magnet_on = false
+		magnet_pivot.look_at(get_global_mouse_position())
 
+	# ==========================================
+	# معالجة الضغط المطول على E للرمي أو السحب
+	# ==========================================
+	handle_magnet_input(delta)
+
+	# معالجة سحب وتثبيت الجسم
 	if is_magnet_on:
-		pull_objects(delta)
+		process_magnet_logic(delta)
 	# ==========================================
 
 	# =========================
@@ -134,7 +125,7 @@ func _physics_process(delta):
 	# =========================
 	# الاتجاه
 	# =========================
-	var direction = Input.get_axis("ui_left","ui_right")
+	var direction = Input.get_axis("ui_left", "ui_right")
 
 	if direction > 0:
 		anim.flip_h = false
@@ -276,46 +267,165 @@ func _physics_process(delta):
 
 
 # ==========================================
-# دالة السحب الصارم والنهائي لمركز اللاعب
+# معالجة إدخال زر المغناطيس (سحب vs رمي)
 # ==========================================
-func pull_objects(_delta: float) -> void:
+func handle_magnet_input(delta: float) -> void:
+	if Input.is_action_just_pressed("toggle_magnet"):
+		e_press_timer = 0.0
+		is_e_held = false
+
+	if Input.is_action_pressed("toggle_magnet"):
+		e_press_timer += delta
+		if e_press_timer >= hold_throw_time:
+			is_e_held = true
+
+	if Input.is_action_just_released("toggle_magnet"):
+		# إذا كان ضغطاً مطولاً وهناك جسم محمول، قُم برَمْيه
+		if is_e_held and held_object != null:
+			throw_held_object()
+		else:
+			# ضغطة قصيرة تعطي تأثير التبديل العادي (Toggle)
+			toggle_magnet()
+		
+		e_press_timer = 0.0
+		is_e_held = false
+
+
+# ==========================================
+# دالة إيقاف/تفعيل المغناطيس
+# ==========================================
+func toggle_magnet() -> void:
+	is_magnet_on = !is_magnet_on
+	
+	if magnet_sprite != null:
+		magnet_sprite.visible = is_magnet_on
+
+	if not is_magnet_on:
+		release_held_object()
+
+
+# ==========================================
+# دالة رمي الجسم في اتجاه نظر اللاعب
+# ==========================================
+func throw_held_object() -> void:
+	if held_object != null and is_instance_valid(held_object):
+		remove_collision_exception_with(held_object)
+		
+		# تحديد الاتجاه بناءً على وجه اللاعب (يمين أو يسار)
+		var throw_dir = -1.0 if anim.flip_h else 1.0
+		
+		if held_object is RigidBody2D:
+			held_object.gravity_scale = 1.0
+			held_object.sleeping = false
+			# إعطاء دَفْعة قوية بالاتجاه الذي ينظر إليه اللاعب
+			held_object.linear_velocity = Vector2(throw_dir * throw_force_x, throw_force_y) + (velocity * 0.3)
+			
+		elif held_object is CharacterBody2D:
+			held_object.velocity = Vector2(throw_dir * throw_force_x, throw_force_y)
+			
+		held_object = null
+		is_object_attached = false
+		is_magnet_on = false
+		
+		if magnet_sprite != null:
+			magnet_sprite.visible = false
+
+
+# ==========================================
+# دالة معالجة سحب وتثبيت الجسم
+# ==========================================
+func process_magnet_logic(delta: float) -> void:
 	if magnet_area == null:
 		return
-		
-	var overlapping_bodies = magnet_area.get_overlapping_bodies()
-	
-	var target_center = global_position
-	if magnet_pivot != null:
-		target_center = magnet_pivot.global_position
-	
-	for body in overlapping_bodies:
-		if body == self or body is TileMap or (Engine.get_version_info().major >= 4 and body.is_class("TileMapLayer")) or body.has_method("get_tileset"):
-			continue
-			
-		if body.is_in_group("pullable"):
-			var distance = target_center.distance_to(body.global_position)
-			
-			if distance < 45.0:
-				if body is RigidBody2D:
-					body.linear_velocity = Vector2.ZERO
-					body.angular_velocity = 0.0
-					body.gravity_scale = 1.0
+
+	# تحديد نقطة التثبيت المرتفعة
+	var target_pos = global_position + Vector2(0, -60)
+	if hold_position != null:
+		target_pos = hold_position.global_position
+
+	# 1. البحث عن جسم قابل للسحب
+	if held_object == null or not is_instance_valid(held_object):
+		var bodies = magnet_area.get_overlapping_bodies()
+		for body in bodies:
+			if body == self or body is TileMap or (Engine.get_version_info().major >= 4 and body.is_class("TileMapLayer")) or body.has_method("get_tileset"):
 				continue
+			if body.is_in_group("pullable"):
+				held_object = body
+				is_object_attached = false
 				
-			var direction = body.global_position.direction_to(target_center)
+				# استثناء التصادم أثناء الحمل
+				if held_object is RigidBody2D or held_object is CharacterBody2D:
+					add_collision_exception_with(held_object)
+				break
+
+	# 2. متابعة حركة الجسم والسحب
+	if held_object != null and is_instance_valid(held_object):
+		
+		# الكشف عن العوائق الخارجية
+		if check_for_obstacle(target_pos):
+			release_held_object()
+			is_magnet_on = false
+			if magnet_sprite != null:
+				magnet_sprite.visible = false
+			return
+
+		var distance = held_object.global_position.distance_to(target_pos)
+
+		# الوصول للنقطة والتثبيت
+		if distance <= 20.0:
+			is_object_attached = true
+
+		if is_object_attached:
+			held_object.global_position = target_pos
 			
-			if body is RigidBody2D:
-				if body.sleeping:
-					body.sleeping = false
-				
-				body.gravity_scale = 0.0       
-				body.angular_velocity = 0.0     
-				body.linear_velocity = direction * magnet_speed  
-				
-			elif body is CharacterBody2D:
-				body.velocity = direction * magnet_speed
-				body.move_and_slide()
+			if held_object is RigidBody2D:
+				held_object.linear_velocity = Vector2.ZERO
+				held_object.angular_velocity = 0.0
+				held_object.gravity_scale = 0.0
+				held_object.sleeping = true
+		else:
+			# سحب المكعب باتجاه نقطة التثبيت
+			var dir = held_object.global_position.direction_to(target_pos)
+			if held_object is RigidBody2D:
+				if held_object.sleeping:
+					held_object.sleeping = false
+				held_object.gravity_scale = 0.0
+				held_object.linear_velocity = dir * magnet_speed
+			elif held_object is CharacterBody2D:
+				held_object.velocity = dir * magnet_speed
+				held_object.move_and_slide()
+
+
 # ==========================================
+# دالة الكشف عن العوائق بين اللاعب والجسم
+# ==========================================
+func check_for_obstacle(target_pos: Vector2) -> bool:
+	if held_object == null or not is_instance_valid(held_object):
+		return false
+
+	var space_state = get_world_2d().direct_space_state
+	var query = PhysicsRayQueryParameters2D.create(global_position, held_object.global_position)
+	
+	query.exclude = [get_rid(), held_object.get_rid()]
+	
+	var result = space_state.intersect_ray(query)
+	return result.size() > 0
+
+
+# ==========================================
+# دالة تحرير وإسقاط الجسم المسحوب بدون رمي
+# ==========================================
+func release_held_object() -> void:
+	if held_object != null and is_instance_valid(held_object):
+		remove_collision_exception_with(held_object)
+		
+		if held_object is RigidBody2D:
+			held_object.gravity_scale = 1.0
+			held_object.sleeping = false
+			held_object.linear_velocity = velocity
+			
+	held_object = null
+	is_object_attached = false
 
 
 func start_fall_sequence():
