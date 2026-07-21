@@ -50,7 +50,6 @@
 [ext_resource type="Texture2D" uid="uid://ci8s7cuv57g1s" path="res://Frog Forest/Leaves1.png" id="38_sebme"]
 [ext_resource type="Texture2D" uid="uid://wkd7lo2jo85g" path="res://Frog Forest/Bushes1.png" id="39_2jade"]
 [ext_resource type="Texture2D" uid="uid://briwpi5j7ho6c" path="res://Frog Forest/Screenshot 2026-07-21 085740.png" id="46_cuopx"]
-[ext_resource type="Shader" uid="uid://dubibtcdnmish" path="res://tutorial_o.gdshader" id="48_0nhx1"]
 [ext_resource type="Shader" uid="uid://djjk20f3ssgm4" path="res://tutorial6_o.gdshader" id="49_0nhx1"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_0nhx1"]
@@ -60,9 +59,6 @@ shader_parameter/border_thickness = 0.01
 shader_parameter/border_softness = 0.005
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_lgox0"]
-shader = ExtResource("48_0nhx1")
-shader_parameter/darkness_intensity = 0.5
-shader_parameter/radius = 0.4
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_f450d"]
 size = Vector2(142, 111)
