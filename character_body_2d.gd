@@ -30,6 +30,7 @@ const SLIDE_COOLDOWN = 0.25
 @export var throw_force_y: float = -200.0      # قوة الرمي للأعلى قليلاً
 @export var hold_throw_time: float = 0.25      # الوقت المطلوب بالثواني للضغط المطول للرمي
 @export var hold_height_offset: float = 60.0   # المسافة/الارتفاع فوق رأس اللاعب
+@export var drop_side_offset: float = 40.0     # المسافة الأفقية لإسقاط الجسم بجانب اللاعب
 
 @onready var magnet_pivot: Node2D = get_node_or_null("MagnetPivot")
 @onready var magnet_area: Area2D = get_node_or_null("MagnetPivot/MagnetArea")
@@ -93,10 +94,17 @@ func _physics_process(delta):
 		return
 
 	# ==========================================
-	# تدوير المغناطيس نحو الماوس
+	# تدوير المغناطيس نحو أزرار الإدخال أو الماوس (or)
 	# ==========================================
 	if magnet_pivot != null:
-		magnet_pivot.look_at(get_global_mouse_position())
+		var aim_dir = Input.get_vector("aim_left", "aim_right", "aim_up", "aim_down")
+		
+		# إذا كان اللاعب يضغط على أحد أزرار التصويب/التدوير
+		if aim_dir.length_squared() > 0:
+			magnet_pivot.rotation = aim_dir.angle()
+		else:
+			# وإلا يستمر بالتوجه نحو موقع الماوس
+			magnet_pivot.look_at(get_global_mouse_position())
 
 	# ==========================================
 	# معالجة الضغط المطول على E للرمي أو السحب
@@ -303,7 +311,7 @@ func handle_magnet_input(delta: float) -> void:
 		if is_e_held and held_object != null:
 			throw_held_object()
 		else:
-			# ضغطة قصيرة تعطي تأثير التبديل العادي (Toggle)
+			# ضغطة قصيرة تعطي تأثير التبديل العادي (Toggle) وإسقاط الجسم بجانب اللاعب
 			toggle_magnet()
 		
 		e_press_timer = 0.0
@@ -440,11 +448,27 @@ func check_for_obstacle(target_pos: Vector2) -> bool:
 
 
 # ==========================================
-# دالة تحرير وإسقاط الجسم المسحوب بدون رمي
+# دالة تحرير وإسقاط الجسم المسحوب بجانب اللاعب
 # ==========================================
 func release_held_object() -> void:
 	if held_object != null and is_instance_valid(held_object):
 		remove_collision_exception_with(held_object)
+		
+		# تحديد جهة الإسقاط بناءً على اتجاه نظر اللاعب (يمين أو يسار)
+		var side_dir = -1.0 if anim.flip_h else 1.0
+		var drop_pos = global_position + Vector2(side_dir * drop_side_offset, 0)
+		
+		# التحقق من عدم وجود جدار أو عائق في مكان الإسقاط الجانبي
+		var space_state = get_world_2d().direct_space_state
+		var query = PhysicsRayQueryParameters2D.create(global_position, drop_pos)
+		query.exclude = [get_rid(), held_object.get_rid()]
+		var result = space_state.intersect_ray(query)
+		
+		if result.size() > 0:
+			# إذا كان هناك جدار بجانب اللاعب، اترك الجسم يسقط من موقعه الحالي بدلاً من اختراق الجدار
+			drop_pos = held_object.global_position
+			
+		held_object.global_position = drop_pos
 		
 		if held_object is RigidBody2D:
 			held_object.gravity_scale = 1.0
