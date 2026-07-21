@@ -29,6 +29,7 @@ const SLIDE_COOLDOWN = 0.25
 @export var throw_force_x: float = 700.0       # قوة الرمي الأفقي
 @export var throw_force_y: float = -200.0      # قوة الرمي للأعلى قليلاً
 @export var hold_throw_time: float = 0.25      # الوقت المطلوب بالثواني للضغط المطول للرمي
+@export var hold_height_offset: float = 60.0   # المسافة/الارتفاع فوق رأس اللاعب
 
 @onready var magnet_pivot: Node2D = get_node_or_null("MagnetPivot")
 @onready var magnet_area: Area2D = get_node_or_null("MagnetPivot/MagnetArea")
@@ -36,6 +37,11 @@ const SLIDE_COOLDOWN = 0.25
 
 # عقدة موضع التثبيت فوق الرأس
 @onready var hold_position: Node2D = get_node_or_null("HoldPosition")
+
+# عقد الأصوات
+@onready var jump_sound: AudioStreamPlayer2D = get_node_or_null("JumpSound")
+@onready var charge_sound: AudioStreamPlayer2D = get_node_or_null("ChargeSound")
+@onready var magnet_stick_sound: AudioStreamPlayer2D = get_node_or_null("MagnetStickSound")
 
 var is_magnet_on: bool = false
 var held_object: Node2D = null         # الجسم الممسوك حالياً
@@ -196,7 +202,7 @@ func _physics_process(delta):
 		jump_buffer_timer -= delta
 
 	# =========================
-	# تنفيذ القفز
+	# تنفيذ القفز وتشغيل الصوت
 	# =========================
 	if jump_buffer_timer > 0:
 
@@ -204,6 +210,11 @@ func _physics_process(delta):
 
 			velocity.y = JUMP_VELOCITY
 			jump_count += 1
+
+			# تشغيل صوت القفز مع تغيير بسيط للنبرة
+			if jump_sound != null:
+				jump_sound.pitch_scale = randf_range(0.95, 1.05)
+				jump_sound.play()
 
 			jump_buffer_timer = 0
 			coyote_timer = 0
@@ -267,7 +278,7 @@ func _physics_process(delta):
 
 
 # ==========================================
-# معالجة إدخال زر المغناطيس (سحب vs رمي)
+# معالجة إدخال زر المغناطيس وصوت الشحن (E)
 # ==========================================
 func handle_magnet_input(delta: float) -> void:
 	if Input.is_action_just_pressed("toggle_magnet"):
@@ -277,9 +288,17 @@ func handle_magnet_input(delta: float) -> void:
 	if Input.is_action_pressed("toggle_magnet"):
 		e_press_timer += delta
 		if e_press_timer >= hold_throw_time:
-			is_e_held = true
+			if not is_e_held:
+				is_e_held = true
+				# تشغيل صوت الشحن عند دخول مرحلة الضغط المطول
+				if charge_sound != null and not charge_sound.playing:
+					charge_sound.play()
 
 	if Input.is_action_just_released("toggle_magnet"):
+		# إيقاف صوت الشحن فور إفلات الزر
+		if charge_sound != null and charge_sound.playing:
+			charge_sound.stop()
+
 		# إذا كان ضغطاً مطولاً وهناك جسم محمول، قُم برَمْيه
 		if is_e_held and held_object != null:
 			throw_held_object()
@@ -292,11 +311,16 @@ func handle_magnet_input(delta: float) -> void:
 
 
 # ==========================================
-# دالة إيقاف/تفعيل المغناطيس
+# دالة إيقاف/تفعيل المغناطيس وتشغيل الصوت
 # ==========================================
 func toggle_magnet() -> void:
 	is_magnet_on = !is_magnet_on
 	
+	# تشغيل صوت magnet_stick عند التبديل بالضغطة العادية
+	if magnet_stick_sound != null:
+		magnet_stick_sound.pitch_scale = randf_range(0.95, 1.05)
+		magnet_stick_sound.play()
+
 	if magnet_sprite != null:
 		magnet_sprite.visible = is_magnet_on
 
@@ -332,14 +356,14 @@ func throw_held_object() -> void:
 
 
 # ==========================================
-# دالة معالجة سحب وتثبيت الجسم
+# دالة معالجة سحب وتثبيت الجسم فوق الرأس
 # ==========================================
 func process_magnet_logic(delta: float) -> void:
 	if magnet_area == null:
 		return
 
-	# تحديد نقطة التثبيت المرتفعة
-	var target_pos = global_position + Vector2(0, -60)
+	# تحديد نقطة التثبيت فوق الرأس مباشرة مع مسافة hold_height_offset
+	var target_pos = global_position + Vector2(0, -hold_height_offset)
 	if hold_position != null:
 		target_pos = hold_position.global_position
 
@@ -372,10 +396,11 @@ func process_magnet_logic(delta: float) -> void:
 		var distance = held_object.global_position.distance_to(target_pos)
 
 		# الوصول للنقطة والتثبيت
-		if distance <= 20.0:
+		if distance <= 25.0:
 			is_object_attached = true
 
 		if is_object_attached:
+			# تثبيت موقع المكعب مع حركة اللاعب بالكامل (بما فيها القفز)
 			held_object.global_position = target_pos
 			
 			if held_object is RigidBody2D:
@@ -383,8 +408,10 @@ func process_magnet_logic(delta: float) -> void:
 				held_object.angular_velocity = 0.0
 				held_object.gravity_scale = 0.0
 				held_object.sleeping = true
+			elif held_object is CharacterBody2D:
+				held_object.velocity = Vector2.ZERO
 		else:
-			# سحب المكعب باتجاه نقطة التثبيت
+			# سحب المكعب نحو الرأس بسرعة المغناطيس
 			var dir = held_object.global_position.direction_to(target_pos)
 			if held_object is RigidBody2D:
 				if held_object.sleeping:
