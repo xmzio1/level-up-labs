@@ -1,0 +1,96 @@
+[gd_scene format=3 uid="uid://dpn8gtkv8nidw"]
+
+[ext_resource type="Script" uid="uid://7jyww0d34f0c" path="res://main_menu.gd" id="1_06t4h"]
+
+[node name="MainMenu" type="Control" unique_id=1917473445]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_06t4h")
+
+[node name="Background" type="ColorRect" parent="." unique_id=740463967]
+layout_mode = 0
+offset_right = 640.0
+offset_bottom = 353.0
+
+[node name="TitleLabel" type="Label" parent="." unique_id=178853581]
+modulate = Color(0.3625651, 0.13763878, 0.12696508, 1)
+top_level = true
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -40.99997
+offset_top = -32.0
+offset_right = 40.00003
+offset_bottom = -9.0
+grow_horizontal = 2
+scale = Vector2(3.5099635, 7.110955)
+text = "THE GAME"
+
+[node name="MainButtons" type="VBoxContainer" parent="." unique_id=919765547]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -34.5
+offset_top = -50.5
+offset_right = 42.5
+offset_bottom = 50.5
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(2.2971349, 1.7228022)
+
+[node name="PlayButton" type="Button" parent="MainButtons" unique_id=1729651892]
+layout_mode = 2
+text = "play"
+
+[node name="SettingsButton" type="Button" parent="MainButtons" unique_id=152768686]
+layout_mode = 2
+text = "settings"
+
+[node name="QuitButton" type="Button" parent="MainButtons" unique_id=450890233]
+layout_mode = 2
+text = "quit"
+
+[node name="SettingsMenu" type="PanelContainer" parent="." unique_id=1386255962]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -25.0
+offset_right = 20.0
+offset_bottom = 25.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(8.325512, 3.7408547)
+
+[node name="SettingsVBox" type="VBoxContainer" parent="SettingsMenu" unique_id=166714668]
+layout_mode = 2
+
+[node name="SettingsTitle" type="Label" parent="SettingsMenu/SettingsVBox" unique_id=1003270274]
+layout_mode = 2
+
+[node name="VolumeHBox" type="HBoxContainer" parent="SettingsMenu/SettingsVBox" unique_id=1603392898]
+layout_mode = 2
+
+[node name="VolumeLabel" type="Label" parent="SettingsMenu/SettingsVBox/VolumeHBox" unique_id=1558583096]
+layout_mode = 2
+
+[node name="VolumeSlider" type="HSlider" parent="SettingsMenu/SettingsVBox/VolumeHBox" unique_id=1189908761]
+layout_mode = 2
+
+[node name="FullscreenCheck" type="CheckBox" parent="SettingsMenu" unique_id=301253402]
+layout_mode = 2
+
+[node name="BackButton" type="Button" parent="SettingsMenu" unique_id=1139762007]
+layout_mode = 2
