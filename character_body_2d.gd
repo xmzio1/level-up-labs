@@ -23,6 +23,13 @@ const SLIDE_DURATION = 0.4
 const SLIDE_COOLDOWN = 0.25
 
 # ==========================================
+# متغيرات ميكانيك الالتصاق بالجدار (Wall Stick) - معدلة
+# ==========================================
+@export var wall_slide_speed: float = 120.0     # أقصى سرعة للانزلاق لأسفل أثناء التعلق
+var is_wall_sticking: bool = false               # هل اللاعب ملتصق بالجدار حالياً؟
+var wall_normal: Vector2 = Vector2.ZERO          # اتجاه الجدار الملتصق به
+
+# ==========================================
 # متغيرات المغناطيس المطور والرمي
 # ==========================================
 @export var magnet_speed: float = 600.0        # سرعة سحب الجسم نحو الرأس
@@ -99,11 +106,9 @@ func _physics_process(delta):
 	if magnet_pivot != null:
 		var aim_dir = Input.get_vector("aim_left", "aim_right", "aim_up", "aim_down")
 		
-		# إذا كان اللاعب يضغط على أحد أزرار التصويب/التدوير
 		if aim_dir.length_squared() > 0:
 			magnet_pivot.rotation = aim_dir.angle()
 		else:
-			# وإلا يستمر بالتوجه نحو موقع الماوس
 			magnet_pivot.look_at(get_global_mouse_position())
 
 	# ==========================================
@@ -141,13 +146,18 @@ func _physics_process(delta):
 	# =========================
 	var direction = Input.get_axis("ui_left", "ui_right")
 
-	if direction > 0:
+	if direction > 0 and not is_wall_sticking:
 		anim.flip_h = false
-	elif direction < 0:
+	elif direction < 0 and not is_wall_sticking:
 		anim.flip_h = true
 
 	# =========================
-	# بدء السلايد
+	# معالجة الالتصاق بالجدار (Wall Stick Setup)
+	# =========================
+	handle_wall_stick()
+
+	# =========================
+	# بدء السلايد الأرضي
 	# =========================
 	if Input.is_action_just_pressed("ui_page_down") \
 	and is_on_floor() \
@@ -166,32 +176,32 @@ func _physics_process(delta):
 		anim.play("slide")
 
 	# =========================
-	# حركة السلايد
+	# حركة السلايد والسرعة الأفقية
 	# =========================
 	if is_sliding:
-
 		velocity.x = slide_direction * SLIDE_SPEED
-
 		slide_timer -= delta
-
 		if slide_timer <= 0:
 			is_sliding = false
-
-	else:
+	elif not is_wall_sticking:
 		velocity.x = direction * SPEED
 
 	# =========================
-	# الجاذبية
+	# الجاذبية وسلوك الجدار - معدل
 	# =========================
 	if is_on_floor():
-
 		coyote_timer = COYOTE_TIME
 		jump_count = 0
-
+		is_wall_sticking = false
+	elif is_wall_sticking:
+		# إذا كان اللاعب يضغط O، فالجاذبية لا تؤثر إلا كقوة انزلاق بطيئة لأسفل
+		# لتطبيق فكرة "لا يتحرك للأعلى" ولكن ينزلق لأسفل فقط
+		# velocity.y = 0 # إذا أردت تثبيته تماماً حتى لو لم يضغط شيئاً (غير منطقي مع الجاذبية)
+		#velocity.y = min(velocity.y + (GRAVITY * 0.2 * delta), wall_slide_speed)
+		velocity.y = min(velocity.y + (GRAVITY * 0.3 * delta), wall_slide_speed)
+		velocity.x = 0 # إلغاء الحركة الأفقية تماماً أثناء الالتصاق
 	else:
-
 		coyote_timer -= delta
-
 		if velocity.y < 0:
 			velocity.y += GRAVITY * delta
 		else:
@@ -201,7 +211,6 @@ func _physics_process(delta):
 	# تخزين ضغط القفز
 	# =========================
 	if Input.is_action_just_pressed("ui_accept"):
-
 		jump_buffer_timer = JUMP_BUFFER
 		jumping = true
 		jump_hold_time = 0
@@ -210,16 +219,28 @@ func _physics_process(delta):
 		jump_buffer_timer -= delta
 
 	# =========================
-	# تنفيذ القفز وتشغيل الصوت
+	# تنفيذ القفز (مع دعم قفزة الجدار)
 	# =========================
 	if jump_buffer_timer > 0:
 
-		if coyote_timer > 0 or jump_count < MAX_JUMPS:
+		if is_wall_sticking:
+			# قفزة الجدار: دفعة للأعلى وللخارج بعيداً عن الجدار
+			velocity.y = JUMP_VELOCITY
+			velocity.x = wall_normal.x * SPEED * 1.2
+			is_wall_sticking = false
+			jump_count = 1
+
+			if jump_sound != null:
+				jump_sound.pitch_scale = randf_range(0.95, 1.05)
+				jump_sound.play()
+
+			jump_buffer_timer = 0
+
+		elif coyote_timer > 0 or jump_count < MAX_JUMPS:
 
 			velocity.y = JUMP_VELOCITY
 			jump_count += 1
 
-			# تشغيل صوت القفز مع تغيير بسيط للنبرة
 			if jump_sound != null:
 				jump_sound.pitch_scale = randf_range(0.95, 1.05)
 				jump_sound.play()
@@ -228,12 +249,10 @@ func _physics_process(delta):
 			coyote_timer = 0
 
 	# =========================
-	# قفزة قصيرة فقط إذا كانت ضغطة قصيرة
+	# قفزة قصيرة
 	# =========================
 	if Input.is_action_just_released("ui_accept"):
-
 		jumping = false
-
 		if jump_hold_time < SHORT_PRESS_TIME and velocity.y < 0:
 			velocity.y *= JUMP_CUT
 
@@ -243,46 +262,97 @@ func _physics_process(delta):
 	move_and_slide()
 
 	# =========================
-	# الأنيميشن
+	# الأنيميشن - معدل لإضافة التمييز على الجدار
 	# =========================
 	if is_sliding:
-
 		anim.play("slide")
-
+	elif is_wall_sticking:
+		# التمييز بين حالتي الثبات والتحرك لأسفل
+		# نستخدم velocity.y للتأكد من وجود حركة فعلية لأسفل
+		# نستخدم عتبة صغيرة (مثلاً 5.0) لتجنب تشغيل أنميشن الحركة بسبب اهتزازات بسيطة في الفيزياء
+		if abs(velocity.y) > 5.0:
+			if anim.sprite_frames.has_animation("wall_slide"):
+				anim.play("wall_slide")
+			else:
+				anim.play("fall") # Fallback
+		else:
+			if anim.sprite_frames.has_animation("wall_stick"):
+				anim.play("wall_stick")
+			else:
+				# إذا لم يوجد أنميشن ثبات، جرب تجميد الإطار الأول لأنميشن الانزلاق
+				if anim.sprite_frames.has_animation("wall_slide"):
+					anim.play("wall_slide")
+					anim.frame = 0 # تجميد على الإطار الأول
+				else:
+					anim.play("idle") # Fallback final
 	elif is_on_floor():
-
 		if direction != 0:
-
 			if anim.animation != "run":
 				run_first_time = true
 				anim.play("run")
 				anim.frame = 0
-
 		else:
-
 			anim.play("idle")
 			run_first_time = true
-
 	else:
-
 		run_first_time = true
-
 		if velocity.y < 0:
 			anim.play("jump")
 		else:
 			anim.play("fall")
 
 	# =========================
-	# السقوط
+	# السقوط والموت
 	# =========================
 	if global_position.y > FALL_LIMIT:
 		start_fall_sequence()
 
-	# =========================
-	# الموت من البلاطات
-	# =========================
 	if is_on_danger_tile():
 		die()
+
+
+# ==========================================
+# دالة فحص وتفعيل الالتصاق بالجدران التي تحتوي على "wa"
+# ==========================================
+func handle_wall_stick() -> void:
+	# يجب أن نكون ملامسين للجدار في الهواء ويتم الضغط على زر "wall_stick" (زر O)
+	if is_on_wall() and not is_on_floor() and Input.is_action_pressed("wall_stick"):
+		var wall_valid = false
+
+		# الفحص عبر تصدعات واحتكاك التصادم مع الجدران
+		for i in get_slide_collision_count():
+			var collision_info = get_slide_collision(i)
+			var collider = collision_info.get_collider()
+
+			if collider != null:
+				var collider_name = collider.name.to_lower()
+				
+				# 1. فحص إذا كان اسم العقدة يحتوي على "wa"
+				if "wa" in collider_name:
+					wall_valid = true
+					wall_normal = collision_info.get_normal()
+					break
+				
+				# 2. إذا كانت بلاطات TileMap أو TileMapLayer
+				if collider is TileMap or collider.has_method("get_tileset") or (Engine.get_version_info().major >= 4 and collider.is_class("TileMapLayer")):
+					# إذا كان اسم طبقة البلاطات يحوي wa
+					if "wa" in collider_name:
+						wall_valid = true
+						wall_normal = collision_info.get_normal()
+						break
+
+		if wall_valid:
+			is_wall_sticking = true
+			# توجيه وجه الشخصية بالاتجاه المعاكس للجدار
+			# ملاحظة: تم نقل هذا الجزء هنا ليعمل مرة واحدة عند الالتصاق، وليس في كل إطار
+			if wall_normal.x > 0:
+				anim.flip_h = true
+			elif wall_normal.x < 0:
+				anim.flip_h = false
+		else:
+			is_wall_sticking = false
+	else:
+		is_wall_sticking = false
 
 
 # ==========================================
@@ -298,20 +368,16 @@ func handle_magnet_input(delta: float) -> void:
 		if e_press_timer >= hold_throw_time:
 			if not is_e_held:
 				is_e_held = true
-				# تشغيل صوت الشحن عند دخول مرحلة الضغط المطول
 				if charge_sound != null and not charge_sound.playing:
 					charge_sound.play()
 
 	if Input.is_action_just_released("toggle_magnet"):
-		# إيقاف صوت الشحن فور إفلات الزر
 		if charge_sound != null and charge_sound.playing:
 			charge_sound.stop()
 
-		# إذا كان ضغطاً مطولاً وهناك جسم محمول، قُم برَمْيه
 		if is_e_held and held_object != null:
 			throw_held_object()
 		else:
-			# ضغطة قصيرة تعطي تأثير التبديل العادي (Toggle) وإسقاط الجسم بجانب اللاعب
 			toggle_magnet()
 		
 		e_press_timer = 0.0
@@ -324,7 +390,6 @@ func handle_magnet_input(delta: float) -> void:
 func toggle_magnet() -> void:
 	is_magnet_on = !is_magnet_on
 	
-	# تشغيل صوت magnet_stick عند التبديل بالضغطة العادية
 	if magnet_stick_sound != null:
 		magnet_stick_sound.pitch_scale = randf_range(0.95, 1.05)
 		magnet_stick_sound.play()
@@ -343,13 +408,11 @@ func throw_held_object() -> void:
 	if held_object != null and is_instance_valid(held_object):
 		remove_collision_exception_with(held_object)
 		
-		# تحديد الاتجاه بناءً على وجه اللاعب (يمين أو يسار)
 		var throw_dir = -1.0 if anim.flip_h else 1.0
 		
 		if held_object is RigidBody2D:
 			held_object.gravity_scale = 1.0
 			held_object.sleeping = false
-			# إعطاء دَفْعة قوية بالاتجاه الذي ينظر إليه اللاعب
 			held_object.linear_velocity = Vector2(throw_dir * throw_force_x, throw_force_y) + (velocity * 0.3)
 			
 		elif held_object is CharacterBody2D:
@@ -370,7 +433,6 @@ func process_magnet_logic(delta: float) -> void:
 	if magnet_area == null:
 		return
 
-	# تحديد نقطة التثبيت فوق الرأس مباشرة مع مسافة hold_height_offset
 	var target_pos = global_position + Vector2(0, -hold_height_offset)
 	if hold_position != null:
 		target_pos = hold_position.global_position
@@ -385,7 +447,6 @@ func process_magnet_logic(delta: float) -> void:
 				held_object = body
 				is_object_attached = false
 				
-				# استثناء التصادم أثناء الحمل
 				if held_object is RigidBody2D or held_object is CharacterBody2D:
 					add_collision_exception_with(held_object)
 				break
@@ -393,7 +454,6 @@ func process_magnet_logic(delta: float) -> void:
 	# 2. متابعة حركة الجسم والسحب
 	if held_object != null and is_instance_valid(held_object):
 		
-		# الكشف عن العوائق الخارجية
 		if check_for_obstacle(target_pos):
 			release_held_object()
 			is_magnet_on = false
@@ -403,12 +463,10 @@ func process_magnet_logic(delta: float) -> void:
 
 		var distance = held_object.global_position.distance_to(target_pos)
 
-		# الوصول للنقطة والتثبيت
 		if distance <= 25.0:
 			is_object_attached = true
 
 		if is_object_attached:
-			# تثبيت موقع المكعب مع حركة اللاعب بالكامل (بما فيها القفز)
 			held_object.global_position = target_pos
 			
 			if held_object is RigidBody2D:
@@ -419,7 +477,6 @@ func process_magnet_logic(delta: float) -> void:
 			elif held_object is CharacterBody2D:
 				held_object.velocity = Vector2.ZERO
 		else:
-			# سحب المكعب نحو الرأس بسرعة المغناطيس
 			var dir = held_object.global_position.direction_to(target_pos)
 			if held_object is RigidBody2D:
 				if held_object.sleeping:
@@ -454,18 +511,15 @@ func release_held_object() -> void:
 	if held_object != null and is_instance_valid(held_object):
 		remove_collision_exception_with(held_object)
 		
-		# تحديد جهة الإسقاط بناءً على اتجاه نظر اللاعب (يمين أو يسار)
 		var side_dir = -1.0 if anim.flip_h else 1.0
 		var drop_pos = global_position + Vector2(side_dir * drop_side_offset, 0)
 		
-		# التحقق من عدم وجود جدار أو عائق في مكان الإسقاط الجانبي
 		var space_state = get_world_2d().direct_space_state
 		var query = PhysicsRayQueryParameters2D.create(global_position, drop_pos)
 		query.exclude = [get_rid(), held_object.get_rid()]
 		var result = space_state.intersect_ray(query)
 		
 		if result.size() > 0:
-			# إذا كان هناك جدار بجانب اللاعب، اترك الجسم يسقط من موقعه الحالي بدلاً من اختراق الجدار
 			drop_pos = held_object.global_position
 			
 		held_object.global_position = drop_pos
