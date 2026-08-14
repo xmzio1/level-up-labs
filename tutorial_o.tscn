@@ -75,6 +75,7 @@
 [ext_resource type="Texture2D" uid="uid://wkd7lo2jo85g" path="res://Frog Forest/Bushes1.png" id="39_2jade"]
 [ext_resource type="Texture2D" uid="uid://briwpi5j7ho6c" path="res://Frog Forest/Screenshot 2026-07-21 085740.png" id="46_cuopx"]
 [ext_resource type="Shader" uid="uid://djjk20f3ssgm4" path="res://tutorial6_o.gdshader" id="49_0nhx1"]
+[ext_resource type="AudioStream" uid="uid://ca7aqo8pu6rwt" path="res://slide.wav" id="53_p1hia"]
 [ext_resource type="Texture2D" uid="uid://cvrr5qdcoig1j" path="res://sound/Wall jump down.png/Idle2.png/Wall jump wall.png" id="65_6ue1x"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_0nhx1"]
@@ -306,8 +307,12 @@ animations = [{
 "speed": 12.0
 }]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_aimf2"]
-size = Vector2(42.25, 54)
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_p1hia"]
+radius = 27.0
+height = 54.0
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_kuuwj"]
+height = 35.0
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_sb8ek"]
 
@@ -315,7 +320,7 @@ size = Vector2(42.25, 54)
 texture = ExtResource("28_sebme")
 texture_region_size = Vector2i(64, 64)
 0:0/0 = 0
-0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-32, -32, 32, -32, 32, -6.8301315, -32, -6.8301315)
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-32, -32, 32, -32, 32, -10.666666, -32, -10.666666)
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_7x0g7"]
 texture = ExtResource("29_d0hw0")
@@ -329,6 +334,7 @@ texture_region_size = Vector2i(64, 64)
 0:0/next_alternative_id = 2
 0:0/0 = 0
 0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-32, -32, 32, -32, 32, 32, -32, 32)
+0:0/0/physics_layer_1/polygon_0/points = PackedVector2Array(32, -32, 32, 32, 12.799999, 32, 12.799999, -32, 32, -32)
 0:0/0/custom_data_0 = "wa"
 0:0/1 = 1
 0:0/1/texture_origin = Vector2i(64, 64)
@@ -358,7 +364,7 @@ texture_region_size = Vector2i(64, 64)
 texture = ExtResource("34_h2rgu")
 texture_region_size = Vector2i(64, 64)
 0:0/0 = 0
-0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-32, -32, 32, -32, 32, -9.003357, -32, -9.003357)
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-32, -32, 32, -32, 32, -19.2, -32, -19.2)
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ua5r5"]
 texture = ExtResource("35_h2rgu")
@@ -412,7 +418,7 @@ metadata/_edit_lock_ = true
 
 [node name="player 2D" type="Sprite2D" parent="." unique_id=1872843154]
 material = SubResource("ShaderMaterial_lgox0")
-position = Vector2(20, 242)
+position = Vector2(2900, 147)
 
 [node name="CharacterBody2D" type="CharacterBody2D" parent="player 2D" unique_id=1070440165]
 position = Vector2(302, 13)
@@ -439,12 +445,17 @@ ignore_rotation = false
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="player 2D/CharacterBody2D" unique_id=1870406189]
 material = SubResource("ShaderMaterial_v7hwy")
 sprite_frames = SubResource("SpriteFrames_o2axr")
-animation = &"die"
+animation = &"slide"
 metadata/_edit_lock_ = true
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="player 2D/CharacterBody2D" unique_id=353076147]
+[node name="StandCollision" type="CollisionShape2D" parent="player 2D/CharacterBody2D" unique_id=11479007]
 position = Vector2(0, 5)
-shape = SubResource("RectangleShape2D_aimf2")
+shape = SubResource("CapsuleShape2D_p1hia")
+
+[node name="SlideCollision" type="CollisionShape2D" parent="player 2D/CharacterBody2D" unique_id=353076147]
+position = Vector2(0, 5.5)
+shape = SubResource("CapsuleShape2D_kuuwj")
+disabled = true
 
 [node name="CPUParticles2D" type="CPUParticles2D" parent="player 2D/CharacterBody2D" unique_id=1695027517]
 emitting = false
@@ -452,6 +463,10 @@ amount = 1
 texture = ExtResource("27_856co")
 lifetime = 0.5
 gravity = Vector2(-500, -998)
+
+[node name="slidesound" type="AudioStreamPlayer2D" parent="player 2D/CharacterBody2D" unique_id=1556431368]
+position = Vector2(-0.5, 11)
+stream = ExtResource("53_p1hia")
 
 [node name="JumpSound" type="AudioStreamPlayer2D" parent="player 2D/CharacterBody2D" unique_id=962994047]
 position = Vector2(-302, -13)
@@ -548,6 +563,7 @@ motion_mirroring = Vector2(640, 0)
 texture_filter = 1
 texture = ExtResource("36_shu8x")
 centered = false
+metadata/_edit_lock_ = true
 
 [node name="ParallaxLayer6" type="ParallaxLayer" parent="ParallaxBackground" unique_id=1552949961]
 position = Vector2(0, 24)

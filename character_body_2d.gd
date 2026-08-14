@@ -61,6 +61,7 @@ var wall_normal: Vector2 = Vector2.ZERO          # اتجاه الجدار ال�
 @onready var jump_sound: AudioStreamPlayer2D = get_node_or_null("JumpSound")
 @onready var charge_sound: AudioStreamPlayer2D = get_node_or_null("ChargeSound")
 @onready var magnet_stick_sound: AudioStreamPlayer2D = get_node_or_null("MagnetStickSound")
+@onready var slide_sound: AudioStreamPlayer2D = get_node_or_null("slidesound")
 
 var is_magnet_on: bool = false
 var held_object: Node2D = null         # الجسم الممسوك حالياً
@@ -79,12 +80,14 @@ var is_playing_idle_long: bool = false
 var is_in_idle_2: bool = false
 
 # ==========================================
+# ربط عقد التصادم المنفصلة (Stand & Slide)
+# ==========================================
+@onready var stand_collision: CollisionShape2D = get_node_or_null("StandCollision")
+@onready var slide_collision: CollisionShape2D = get_node_or_null("SlideCollision")
 
-@onready var anim = $AnimatedSprite2D
-@onready var collision = $CollisionShape2D
+@onready var anim = get_node_or_null("AnimatedSprite2D")
 
 @export var respawn_position = Vector2(100, 200)
-
 @export var tilemap : TileMap
 
 var is_falling = false
@@ -103,15 +106,18 @@ var jumping = false
 var coyote_timer = 0.0
 var jump_buffer_timer = 0.0
 
-# حفظ مكان الكولجن والحجم الأصل للإنيميشن
-var original_position
+# حفظ حجم الأنيميشن الأصلية
 var original_anim_scale: Vector2 = Vector2.ONE
 
 
 func _ready():
 	respawn_position = global_position
-	original_position = collision.position
 	
+	# ضبط حالة عقد التصادم المنفصلة عند بدء اللعبة
+	if stand_collision != null and slide_collision != null:
+		stand_collision.disabled = false
+		slide_collision.disabled = true
+
 	if anim != null:
 		original_anim_scale = anim.scale
 		# ربط إشارة الانتهاء من الأنيميشن للتعامل مع idle_fortolong
@@ -149,14 +155,6 @@ func _physics_process(delta):
 		process_magnet_logic(delta)
 
 	# =========================
-	# تحريك الكولجن أثناء السلايد
-	# =========================
-	if is_sliding:
-		collision.position.y = original_position.y - 8
-	else:
-		collision.position = original_position
-
-	# =========================
 	# عداد ضغط القفز
 	# =========================
 	if jumping:
@@ -174,9 +172,9 @@ func _physics_process(delta):
 	var direction = Input.get_axis("ui_left", "ui_right")
 
 	if direction > 0 and not is_wall_sticking:
-		anim.flip_h = false
+		if anim != null: anim.flip_h = false
 	elif direction < 0 and not is_wall_sticking:
-		anim.flip_h = true
+		if anim != null: anim.flip_h = true
 
 	# =========================
 	# معالجة الالتصاق بالجدار (Wall Stick Setup)
@@ -191,16 +189,7 @@ func _physics_process(delta):
 	and slide_cooldown_timer <= 0 \
 	and not is_sliding:
 
-		is_sliding = true
-		slide_timer = SLIDE_DURATION
-		slide_cooldown_timer = SLIDE_COOLDOWN
-
-		if anim.flip_h:
-			slide_direction = -1
-		else:
-			slide_direction = 1
-
-		anim.play("slide")
+		start_slide()
 
 	# =========================
 	# حركة السلايد والسرعة الأفقية
@@ -208,8 +197,11 @@ func _physics_process(delta):
 	if is_sliding:
 		velocity.x = slide_direction * SLIDE_SPEED
 		slide_timer -= delta
+		
+		# التوقف عن الانزلاق عند انتهاء الوقت بشرط عدم وجود سقف
 		if slide_timer <= 0:
-			is_sliding = false
+			if can_stand_up():
+				stop_slide()
 	elif not is_wall_sticking:
 		velocity.x = direction * SPEED
 
@@ -248,6 +240,7 @@ func _physics_process(delta):
 	if jump_buffer_timer > 0:
 
 		if is_wall_sticking:
+			if is_sliding: stop_slide()
 			velocity.y = JUMP_VELOCITY
 			velocity.x = wall_normal.x * SPEED * 1.2
 			is_wall_sticking = false
@@ -261,6 +254,7 @@ func _physics_process(delta):
 
 		elif coyote_timer > 0 or jump_count < MAX_JUMPS:
 
+			if is_sliding: stop_slide()
 			velocity.y = JUMP_VELOCITY
 			jump_count += 1
 
@@ -300,9 +294,71 @@ func _physics_process(delta):
 
 
 # ==========================================
+# التبديل بين عقدتي التصادم أثناء السلايد
+# ==========================================
+func start_slide() -> void:
+	is_sliding = true
+	slide_timer = SLIDE_DURATION
+	slide_cooldown_timer = SLIDE_COOLDOWN
+
+	if anim != null:
+		if anim.flip_h:
+			slide_direction = -1
+		else:
+			slide_direction = 1
+		anim.play("slide")
+
+	# تعطيل كولجن الوقوف وتفعيل كولجن الانزلاق بشكل آمن فيزياءً
+	if stand_collision != null and slide_collision != null:
+		stand_collision.set_deferred("disabled", true)
+		slide_collision.set_deferred("disabled", false)
+
+	# تشغيل صوت الانزلاق
+	if slide_sound != null:
+		slide_sound.pitch_scale = randf_range(0.95, 1.05)
+		slide_sound.play()
+
+
+func stop_slide() -> void:
+	is_sliding = false
+
+	# العودة إلى كولجن الوقوف
+	if stand_collision != null and slide_collision != null:
+		stand_collision.set_deferred("disabled", false)
+		slide_collision.set_deferred("disabled", true)
+
+	# إيقاف صوت الانزلاق عند الانتهاء
+	if slide_sound != null and slide_sound.playing:
+		slide_sound.stop()
+
+
+# دالة فحص وجود سقف يمنع الوقوف فوق رأس اللاعب
+func can_stand_up() -> bool:
+	if stand_collision == null or stand_collision.shape == null:
+		return true
+
+	var space_state = get_world_2d().direct_space_state
+	# تحديد طول شعاع الفحص بناءً على شكل كولجن الوقوف الاصلي
+	var ray_length = 32.0
+	if stand_collision.shape is CapsuleShape2D:
+		ray_length = stand_collision.shape.height
+	elif stand_collision.shape is RectangleShape2D:
+		ray_length = stand_collision.shape.size.y
+
+	var query = PhysicsRayQueryParameters2D.create(global_position, global_position + Vector2(0, -ray_length))
+	query.exclude = [get_rid()]
+	var result = space_state.intersect_ray(query)
+	
+	return result.size() == 0
+
+
+# ==========================================
 # دالة معالجة الأنيميشن والنظام الزمني لـ Idle
 # ==========================================
 func handle_animations(direction: float, delta: float) -> void:
+	if anim == null:
+		return
+
 	if is_sliding:
 		reset_idle_timers()
 		anim.play("slide")
@@ -356,7 +412,7 @@ func reset_idle_timers() -> void:
 
 
 func _on_animation_finished() -> void:
-	if anim.animation == "idle_fortolong":
+	if anim != null and anim.animation == "idle_fortolong":
 		is_playing_idle_long = false
 		is_in_idle_2 = true
 		if anim.sprite_frames.has_animation("idle_2"):
@@ -364,7 +420,7 @@ func _on_animation_finished() -> void:
 
 
 # ==========================================
-# دالة فحص وتفعيل الالتصاق التلقائي بالجدران (تم حظر شرط الإدخال)
+# دالة فحص وتفعيل الالتصاق التلقائي بالجدران (في الطبقة 1 فقط)
 # ==========================================
 func handle_wall_stick() -> void:
 	if is_on_wall() and not is_on_floor():
@@ -375,18 +431,26 @@ func handle_wall_stick() -> void:
 			var collider = collision_info.get_collider()
 
 			if collider != null:
+				# فحص أن المجسم يقع في Physics Layer 1
+				var is_in_layer_1 = false
+				if "collision_layer" in collider:
+					is_in_layer_1 = (collider.collision_layer & 1) != 0
+				else:
+					is_in_layer_1 = true
+
+				if not is_in_layer_1:
+					continue
+
 				var node_name = collider.name.to_lower()
 				var parent_name = ""
 				if collider.get_parent() != null:
 					parent_name = collider.get_parent().name.to_lower()
 
-				# 1. الفحص بأسماء العقد أو المجموعات (Groups)
 				if "wa" in node_name or "wa" in parent_name or collider.is_in_group("wa"):
 					wall_valid = true
 					wall_normal = collision_info.get_normal()
 					break
 
-				# 2. الفحص عبر Custom Data للبلاطة داخل الـ TileMap / TileMapLayer
 				if collider is TileMap or (Engine.get_version_info().major >= 4 and collider.is_class("TileMapLayer")):
 					var collision_point = collision_info.get_position() - collision_info.get_normal()
 					var tile_pos = collider.local_to_map(collider.to_local(collision_point))
@@ -396,14 +460,12 @@ func handle_wall_stick() -> void:
 						if collider.is_class("TileMapLayer"):
 							tile_data = collider.get_cell_tile_data(tile_pos)
 						else:
-							# البحث عبر الطبقات الخمس الأولى للـ TileMap
 							for layer in range(5):
 								tile_data = collider.get_cell_tile_data(layer, tile_pos)
 								if tile_data != null:
 									break
 
 					if tile_data != null:
-						# التحقق من اسم الخاصية tile_type أو wa
 						var custom_val = tile_data.get_custom_data("tile_type")
 						if custom_val == null or custom_val == "":
 							custom_val = tile_data.get_custom_data("wa")
@@ -415,10 +477,11 @@ func handle_wall_stick() -> void:
 
 		if wall_valid:
 			is_wall_sticking = true
-			if wall_normal.x > 0:
-				anim.flip_h = false
-			elif wall_normal.x < 0:
-				anim.flip_h = true
+			if anim != null:
+				if wall_normal.x > 0:
+					anim.flip_h = false
+				elif wall_normal.x < 0:
+					anim.flip_h = true
 		else:
 			is_wall_sticking = false
 	else:
@@ -454,9 +517,6 @@ func handle_magnet_input(delta: float) -> void:
 		is_e_held = false
 
 
-# ==========================================
-# دالة إيقاف/تفعيل المغناطيس وتشغيل الصوت
-# ==========================================
 func toggle_magnet() -> void:
 	is_magnet_on = !is_magnet_on
 	
@@ -471,14 +531,13 @@ func toggle_magnet() -> void:
 		release_held_object()
 
 
-# ==========================================
-# دالة رمي الجسم في اتجاه نظر اللاعب
-# ==========================================
 func throw_held_object() -> void:
 	if held_object != null and is_instance_valid(held_object):
 		remove_collision_exception_with(held_object)
 		
-		var throw_dir = -1.0 if anim.flip_h else 1.0
+		var throw_dir = 1.0
+		if anim != null:
+			throw_dir = -1.0 if anim.flip_h else 1.0
 		
 		if held_object is RigidBody2D:
 			held_object.gravity_scale = 1.0
@@ -496,9 +555,6 @@ func throw_held_object() -> void:
 			magnet_sprite.visible = false
 
 
-# ==========================================
-# دالة معالجة سحب وتثبيت الجسم فوق الرأس
-# ==========================================
 func process_magnet_logic(delta: float) -> void:
 	if magnet_area == null:
 		return
@@ -570,7 +626,10 @@ func release_held_object() -> void:
 	if held_object != null and is_instance_valid(held_object):
 		remove_collision_exception_with(held_object)
 		
-		var side_dir = -1.0 if anim.flip_h else 1.0
+		var side_dir = 1.0
+		if anim != null:
+			side_dir = -1.0 if anim.flip_h else 1.0
+			
 		var drop_pos = global_position + Vector2(side_dir * drop_side_offset, 0)
 		
 		var space_state = get_world_2d().direct_space_state
@@ -592,9 +651,6 @@ func release_held_object() -> void:
 	is_object_attached = false
 
 
-# ==========================================
-# دالة الموت (تكبير الأنيميشن + العبارة العشوائية)
-# ==========================================
 func die():
 	if is_falling:
 		return
@@ -602,25 +658,26 @@ func die():
 	is_falling = true
 	velocity = Vector2.ZERO
 
-	# تشغيل أنيميشن die
-	if anim.sprite_frames.has_animation("die"):
-		anim.play("die")
-	else:
-		anim.play("fall")
+	if slide_sound != null and slide_sound.playing:
+		slide_sound.stop()
 
-	# تكبير حجم الشخصية تدريجياً أثناء أنيميشن الموت
-	var tween = create_tween()
-	tween.tween_property(anim, "scale", original_anim_scale * 2.2, 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	if anim != null:
+		if anim.sprite_frames.has_animation("die"):
+			anim.play("die")
+		else:
+			anim.play("fall")
 
-	# اختيار رسالة عشوائية وإظهار الشاشة
+		var tween = create_tween()
+		tween.tween_property(anim, "scale", original_anim_scale * 2.2, 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
 	var random_text = death_messages[randi() % death_messages.size()]
 	var noob_layer = show_noob_screen(random_text)
 
-	# الانتظار لمدة ثانيتين لرؤية الأنيميشن والشاشة الكبيرة
 	await get_tree().create_timer(2.0).timeout
 
-	# إرجاع الحجم للأصل وإعادة اللاعب لنقطة الترسيب
-	anim.scale = original_anim_scale
+	if anim != null:
+		anim.scale = original_anim_scale
+		
 	if is_instance_valid(noob_layer):
 		noob_layer.queue_free()
 
@@ -629,28 +686,22 @@ func die():
 	is_falling = false
 
 
-# ==========================================
-# دالة إنشاء شاشة الرسالة برمجياً
-# ==========================================
 func show_noob_screen(text_to_display: String) -> CanvasLayer:
 	var canvas_layer = CanvasLayer.new()
 	
-	# خلفية سوداء شفافة
 	var color_rect = ColorRect.new()
 	color_rect.color = Color(0, 0, 0, 0.5)
 	color_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
 	canvas_layer.add_child(color_rect)
 
-	# نص الرسالة العشوائية
 	var label = Label.new()
 	label.text = text_to_display
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.set_anchors_preset(Control.PRESET_FULL_RECT)
 	
-	# خط كبير ولون مميز
 	label.add_theme_font_size_override("font_size", 42)
-	label.add_theme_color_override("font_color", Color(1, 0.25, 0.25)) # أحمر ملفت
+	label.add_theme_color_override("font_color", Color(1, 0.25, 0.25))
 	
 	canvas_layer.add_child(label)
 	get_tree().root.add_child(canvas_layer)
