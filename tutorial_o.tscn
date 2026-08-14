@@ -176,7 +176,7 @@ animations = [{
 }],
 "loop": 1,
 "name": &"idle_2",
-"speed": 5.0
+"speed": 12.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -294,7 +294,7 @@ animations = [{
 }],
 "loop": 1,
 "name": &"wall_slide",
-"speed": 5.0
+"speed": 12.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -302,7 +302,7 @@ animations = [{
 }],
 "loop": 1,
 "name": &"wall_stick",
-"speed": 5.0
+"speed": 12.0
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_aimf2"]
@@ -426,7 +426,7 @@ ignore_rotation = false
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="player 2D/CharacterBody2D" unique_id=1870406189]
 material = SubResource("ShaderMaterial_v7hwy")
 sprite_frames = SubResource("SpriteFrames_o2axr")
-animation = &"wall_slide"
+animation = &"die"
 metadata/_edit_lock_ = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="player 2D/CharacterBody2D" unique_id=353076147]
