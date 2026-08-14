@@ -235,7 +235,7 @@ animations = [{
 }],
 "loop": 0,
 "name": &"idle_fortolong",
-"speed": 5.0
+"speed": 12.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -427,7 +427,6 @@ ignore_rotation = false
 material = SubResource("ShaderMaterial_v7hwy")
 sprite_frames = SubResource("SpriteFrames_o2axr")
 animation = &"wall_slide"
-frame_progress = 0.562313
 metadata/_edit_lock_ = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="player 2D/CharacterBody2D" unique_id=353076147]
