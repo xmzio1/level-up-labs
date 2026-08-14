@@ -85,7 +85,7 @@ var is_in_idle_2: bool = false
 
 @export var respawn_position = Vector2(100, 200)
 
-var tilemap : TileMap
+@export var tilemap : TileMap
 
 var is_falling = false
 var jump_count = 0
@@ -364,10 +364,10 @@ func _on_animation_finished() -> void:
 
 
 # ==========================================
-# دالة فحص وتفعيل الالتصاق بالجدران وعكس الأنيميشن
+# دالة فحص وتفعيل الالتصاق التلقائي بالجدران (تم حظر شرط الإدخال)
 # ==========================================
 func handle_wall_stick() -> void:
-	if is_on_wall() and not is_on_floor() and Input.is_action_pressed("wall_stick"):
+	if is_on_wall() and not is_on_floor():
 		var wall_valid = false
 
 		for i in get_slide_collision_count():
@@ -380,16 +380,38 @@ func handle_wall_stick() -> void:
 				if collider.get_parent() != null:
 					parent_name = collider.get_parent().name.to_lower()
 
+				# 1. الفحص بأسماء العقد أو المجموعات (Groups)
 				if "wa" in node_name or "wa" in parent_name or collider.is_in_group("wa"):
 					wall_valid = true
 					wall_normal = collision_info.get_normal()
 					break
 
-				if collider is TileMap or collider.has_method("get_tileset") or (Engine.get_version_info().major >= 4 and collider.is_class("TileMapLayer")):
-					if "wa" in node_name or "wa" in parent_name:
-						wall_valid = true
-						wall_normal = collision_info.get_normal()
-						break
+				# 2. الفحص عبر Custom Data للبلاطة داخل الـ TileMap / TileMapLayer
+				if collider is TileMap or (Engine.get_version_info().major >= 4 and collider.is_class("TileMapLayer")):
+					var collision_point = collision_info.get_position() - collision_info.get_normal()
+					var tile_pos = collider.local_to_map(collider.to_local(collision_point))
+					
+					var tile_data = null
+					if collider.has_method("get_cell_tile_data"):
+						if collider.is_class("TileMapLayer"):
+							tile_data = collider.get_cell_tile_data(tile_pos)
+						else:
+							# البحث عبر الطبقات الخمس الأولى للـ TileMap
+							for layer in range(5):
+								tile_data = collider.get_cell_tile_data(layer, tile_pos)
+								if tile_data != null:
+									break
+
+					if tile_data != null:
+						# التحقق من اسم الخاصية tile_type أو wa
+						var custom_val = tile_data.get_custom_data("tile_type")
+						if custom_val == null or custom_val == "":
+							custom_val = tile_data.get_custom_data("wa")
+						
+						if custom_val == "wa" or custom_val == true:
+							wall_valid = true
+							wall_normal = collision_info.get_normal()
+							break
 
 		if wall_valid:
 			is_wall_sticking = true
