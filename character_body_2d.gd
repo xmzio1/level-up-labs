@@ -111,16 +111,15 @@ var original_anim_scale: Vector2 = Vector2.ONE
 
 
 func _ready():
+	add_to_group("player")
 	respawn_position = global_position
 	
-	# ضبط حالة عقد التصادم المنفصلة عند بدء اللعبة
 	if stand_collision != null and slide_collision != null:
 		stand_collision.disabled = false
 		slide_collision.disabled = true
 
 	if anim != null:
 		original_anim_scale = anim.scale
-		# ربط إشارة الانتهاء من الأنيميشن للتعامل مع idle_fortolong
 		if not anim.animation_finished.is_connected(_on_animation_finished):
 			anim.animation_finished.connect(_on_animation_finished)
 
@@ -135,22 +134,42 @@ func _physics_process(delta):
 		return
 
 	# ==========================================
-	# تدوير المغناطيس نحو أزرار الإدخال أو الماوس
+	# تدوير المغناطيس (تقييد الحركة بـ 180 درجة أمام اللاعب)
 	# ==========================================
 	if magnet_pivot != null:
+		var target_angle: float = 0.0
 		var aim_dir = Input.get_vector("aim_left", "aim_right", "aim_up", "aim_down")
 		
 		if aim_dir.length_squared() > 0:
-			magnet_pivot.rotation = aim_dir.angle()
+			target_angle = aim_dir.angle()
 		else:
-			magnet_pivot.look_at(get_global_mouse_position())
+			target_angle = (get_global_mouse_position() - magnet_pivot.global_position).angle()
+
+		# تحديد الاتجاه الذي ينظر إليه اللاعب (يمين أم يسار)
+		var is_facing_left = (anim != null and anim.flip_h)
+		
+		if is_facing_left:
+			# النصف الأيسر: من 90 درجة (أسفل) إلى -90 درجة (أعلى) مروراً بـ 180 (يسار)
+			# نطاق الزاوية بالراديان: [PI/2, -PI/2]
+			if target_angle > -PI/2 and target_angle < PI/2:
+				# إذا كان الهدف في النصف الأيمن، نوجّه المغناطيس لأقرب حد (أعلى أو أسفل)
+				if target_angle > 0:
+					target_angle = PI / 2
+				else:
+					target_angle = -PI / 2
+		else:
+			# النصف الأيمن: من -90 درجة (أعلى) إلى 90 درجة (أسفل) مروراً بـ 0 (يمين)
+			# clampf يحد الزاوية بين -PI/2 و PI/2
+			target_angle = clampf(target_angle, -PI / 2, PI / 2)
+
+		magnet_pivot.rotation = target_angle
 
 	# ==========================================
 	# معالجة الضغط المطول على E للرمي أو السحب
 	# ==========================================
 	handle_magnet_input(delta)
 
-	# معالجة سحب وتثبيت الجسم
+	# معالجة سحب وتثبيت الجسم (يعمل حتى لو كان ملتصقاً بالجدار)
 	if is_magnet_on:
 		process_magnet_logic(delta)
 
@@ -182,6 +201,15 @@ func _physics_process(delta):
 	handle_wall_stick()
 
 	# =========================
+	# التحكم برؤية المغناطيس (إخفاؤه عند الالتصاق بالجدار)
+	# =========================
+	if magnet_sprite != null:
+		if is_wall_sticking:
+			magnet_sprite.visible = false
+		else:
+			magnet_sprite.visible = is_magnet_on
+
+	# =========================
 	# بدء السلايد الأرضي
 	# =========================
 	if Input.is_action_just_pressed("ui_page_down") \
@@ -198,7 +226,6 @@ func _physics_process(delta):
 		velocity.x = slide_direction * SLIDE_SPEED
 		slide_timer -= delta
 		
-		# التوقف عن الانزلاق عند انتهاء الوقت بشرط عدم وجود سقف
 		if slide_timer <= 0:
 			if can_stand_up():
 				stop_slide()
@@ -213,7 +240,6 @@ func _physics_process(delta):
 		jump_count = 0
 		is_wall_sticking = false
 	elif is_wall_sticking:
-		# الثبات التام بفعل المغناطيس
 		velocity.y = 0
 		velocity.x = 0
 	else:
@@ -293,9 +319,10 @@ func _physics_process(delta):
 		die()
 
 
-# ==========================================
-# التبديل بين عقدتي التصادم أثناء السلايد
-# ==========================================
+func update_checkpoint(new_position: Vector2) -> void:
+	respawn_position = new_position
+
+
 func start_slide() -> void:
 	is_sliding = true
 	slide_timer = SLIDE_DURATION
@@ -308,12 +335,10 @@ func start_slide() -> void:
 			slide_direction = 1
 		anim.play("slide")
 
-	# تعطيل كولجن الوقوف وتفعيل كولجن الانزلاق بشكل آمن فيزياءً
 	if stand_collision != null and slide_collision != null:
 		stand_collision.set_deferred("disabled", true)
 		slide_collision.set_deferred("disabled", false)
 
-	# تشغيل صوت الانزلاق
 	if slide_sound != null:
 		slide_sound.pitch_scale = randf_range(0.95, 1.05)
 		slide_sound.play()
@@ -322,23 +347,19 @@ func start_slide() -> void:
 func stop_slide() -> void:
 	is_sliding = false
 
-	# العودة إلى كولجن الوقوف
 	if stand_collision != null and slide_collision != null:
 		stand_collision.set_deferred("disabled", false)
 		slide_collision.set_deferred("disabled", true)
 
-	# إيقاف صوت الانزلاق عند الانتهاء
 	if slide_sound != null and slide_sound.playing:
 		slide_sound.stop()
 
 
-# دالة فحص وجود سقف يمنع الوقوف فوق رأس اللاعب
 func can_stand_up() -> bool:
 	if stand_collision == null or stand_collision.shape == null:
 		return true
 
 	var space_state = get_world_2d().direct_space_state
-	# تحديد طول شعاع الفحص بناءً على شكل كولجن الوقوف الاصلي
 	var ray_length = 32.0
 	if stand_collision.shape is CapsuleShape2D:
 		ray_length = stand_collision.shape.height
@@ -352,9 +373,6 @@ func can_stand_up() -> bool:
 	return result.size() == 0
 
 
-# ==========================================
-# دالة معالجة الأنيميشن والنظام الزمني لـ Idle
-# ==========================================
 func handle_animations(direction: float, delta: float) -> void:
 	if anim == null:
 		return
@@ -419,9 +437,6 @@ func _on_animation_finished() -> void:
 			anim.play("idle_2")
 
 
-# ==========================================
-# دالة فحص وتفعيل الالتصاق التلقائي بالجدران (في الطبقة 1 فقط)
-# ==========================================
 func handle_wall_stick() -> void:
 	if is_on_wall() and not is_on_floor():
 		var wall_valid = false
@@ -431,7 +446,6 @@ func handle_wall_stick() -> void:
 			var collider = collision_info.get_collider()
 
 			if collider != null:
-				# فحص أن المجسم يقع في Physics Layer 1
 				var is_in_layer_1 = false
 				if "collision_layer" in collider:
 					is_in_layer_1 = (collider.collision_layer & 1) != 0
@@ -488,9 +502,6 @@ func handle_wall_stick() -> void:
 		is_wall_sticking = false
 
 
-# ==========================================
-# معالجة إدخال زر المغناطيس وصوت الشحن (E)
-# ==========================================
 func handle_magnet_input(delta: float) -> void:
 	if Input.is_action_just_pressed("toggle_magnet"):
 		e_press_timer = 0.0
@@ -524,7 +535,8 @@ func toggle_magnet() -> void:
 		magnet_stick_sound.pitch_scale = randf_range(0.95, 1.05)
 		magnet_stick_sound.play()
 
-	if magnet_sprite != null:
+	# تحديث الرؤية فقط إذا لم يكن ملتصقاً بالجدار
+	if magnet_sprite != null and not is_wall_sticking:
 		magnet_sprite.visible = is_magnet_on
 
 	if not is_magnet_on:
